@@ -68,8 +68,8 @@ public class EntitiesParser {
             // 2-1. add location
             Graph location = locations.get(i);
             Node node = location.getNodes(false).get(0);
-            String locationName = node.getId().getId();
-            String locationDesc = node.getAttribute(Tag.DESCRIPTION.value);
+            String locationName = node.getId().getId().toLowerCase();
+            String locationDesc = node.getAttribute(Tag.DESCRIPTION.value).toLowerCase();
             loadedLocations[i] = new EntityData(locationName, locationDesc);
 
             // 2-2. add entity
@@ -94,8 +94,8 @@ public class EntitiesParser {
                                   Set<InteractableEntityData> loadedEntities) {
         List<Node> nodes = entityGroup.getNodes(false);
         for (Node node : nodes) {
-            String name = node.getId().getId();
-            String desc = node.getAttribute(Tag.DESCRIPTION.value);
+            String name = node.getId().getId().toLowerCase();
+            String desc = node.getAttribute(Tag.DESCRIPTION.value).toLowerCase();
 
             InteractableEntityData entityData =
                 new InteractableEntityData(name, desc, locationName, this.getEntityType(type));
@@ -118,15 +118,13 @@ public class EntitiesParser {
         for (int i = 0; i < pathSize; i++) {
             Edge path = paths.get(i);
             Node fromLocation = path.getSource().getNode();
-            String fromName = fromLocation.getId().getId();
+            String fromName = fromLocation.getId().getId().toLowerCase();
 
             Node toLocation = path.getTarget().getNode();
-            String toName = toLocation.getId().getId();
+            String toName = toLocation.getId().getId().toLowerCase();
 
             loadedPaths[i] = new PathData(fromName, toName);
         }
         this.paths = loadedPaths;
     }
-
-
 }

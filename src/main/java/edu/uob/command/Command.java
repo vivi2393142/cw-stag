@@ -1,7 +1,6 @@
 package edu.uob.command;
 
 import edu.uob.GameManager;
-import edu.uob.entity.Player;
 import edu.uob.exception.SystemException;
 import edu.uob.exception.UserException;
 

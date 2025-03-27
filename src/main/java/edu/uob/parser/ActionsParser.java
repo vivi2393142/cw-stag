@@ -47,7 +47,7 @@ public class ActionsParser {
             Set<String> triggers = this.getAttrFromAction(action, Tag.TRIGGERS, Tag.KEYPHRASE);
             Set<String> subjects = this.getAttrFromAction(action, Tag.SUBJECTS, Tag.ENTITY);
             String narration = action.getElementsByTagName(Tag.NARRATION.value)
-                .item(0).getTextContent();
+                .item(0).getTextContent().toLowerCase();
 
             Set<String> consumed = this.getAttrFromAction(action, Tag.CONSUMED, Tag.ENTITY);
             int consumedHealth = this.retrieveHealth(consumed); // retrieve health from consumed
@@ -74,7 +74,7 @@ public class ActionsParser {
 
         NodeList childNodeList = parentNode.getElementsByTagName(child.value);
         for (int j = 0; j < childNodeList.getLength(); j++) {
-            String item = childNodeList.item(j).getTextContent().trim();
+            String item = childNodeList.item(j).getTextContent().trim().toLowerCase();
             items.add(item);
         }
 

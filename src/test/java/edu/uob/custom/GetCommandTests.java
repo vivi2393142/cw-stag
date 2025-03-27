@@ -1,248 +1,171 @@
-package edu.uob;
+package edu.uob.custom;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.io.File;
-import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class GetCommandTests {
-    private final String FAIL_PREFIX = "[Fail]";
-    private GameServer server;
-
-    @BeforeEach
-    void setup() {
-        File entitiesFile = Paths.get(
-            new StringBuilder()
-                .append("config")
-                .append(File.separator)
-                .append("basic-entities.dot")
-                .toString()
-        ).toAbsolutePath().toFile();
-
-        File actionsFile = Paths.get(
-            new StringBuilder()
-                .append("config")
-                .append(File.separator)
-                .append("basic-actions.xml")
-                .toString()
-        ).toAbsolutePath().toFile();
-
-        this.server = new GameServer(entitiesFile, actionsFile);
-    }
-
+public class GetCommandTests extends BaseSTAGTests {
     // TEST: get with valid cmd
     @Test
     void testBasicGet() {
-        String response = sendCommandToServer("simon: look");
-        assertTrue(response.contains("axe"), "Should have axe in location");
-        assertTrue(response.contains("potion"), "Should have potion in location");
+        this.assertCommandSucceed("simon: look", "axe");
+        this.assertCommandSucceed("simon: look", "potion");
 
-        sendCommandToServer("simon: get potion");
-        response = sendCommandToServer("simon: inv");
-        assertTrue(response.contains("potion"), "Get potion should work");
+        this.assertCommandSucceed("simon: get potion");
+        this.assertCommandSucceed("simon: inv", "potion");
 
-        sendCommandToServer("simon: GeT axe"); // case-insensitive
-        response = sendCommandToServer("simon: inv");
-        assertTrue(response.contains("axe"), "Get axe should work");
+        this.assertCommandSucceed("simon: GeT axe"); // case-insensitive
+        this.assertCommandSucceed("simon: inv", "axe");
 
-        response = sendCommandToServer("simon: get axe");
-        assertTrue(response.contains(this.FAIL_PREFIX), "Should get same thing again");
+        this.assertCommandFail("simon: get axe");
     }
 
     // TEST: get with invalid cmd
     @Test
     void testInvalidCmdGet() {
         // invalid word
-        sendCommandToServer("simon: getA potion");
-        String response = sendCommandToServer("simon: inv");
-        assertTrue(response.contains("nothing"), "Get potion should fail");
+        this.assertCommandFail("simon: getA potion");
+        this.assertCommandSucceed("simon: inv", "nothing");
 
         // get two at the same time
-        sendCommandToServer("simon: GET axe potion"); // case-insensitive
-        response = sendCommandToServer("simon: inv");
-        assertTrue(response.contains("nothing"), "Get potion should fail");
+        this.assertCommandFail("simon: GET axe potion"); // case-insensitive
+        this.assertCommandSucceed("simon: inv", "nothing");
     }
 
     // TEST: get with other players
     @Test
-    void testGetWithMultiPlayer() {
-        String response = sendCommandToServer("simon: look");
-        assertTrue(response.contains("axe"), "Should have axe in location");
-        assertTrue(response.contains("potion"), "Should have potion in location");
+    void testWithMultiPlayer() {
+        this.assertCommandSucceed("simon: look", "axe");
+        this.assertCommandSucceed("simon: look", "potion");
 
-        sendCommandToServer("simon: GET axe"); // case-insensitive
-        response = sendCommandToServer("simon: inv");
-        assertTrue(response.contains("axe"), "Get axe should work");
-
-        response = sendCommandToServer("simon: look");
-        assertFalse(response.contains("axe"), "Should not have axe in location");
+        this.assertCommandSucceed("simon: GET axe", "axe");
+        this.assertCommandSucceed("simon: inv", "axe");
+        this.assertCommandSucceed("simon: look", "axe", true);
 
         // other player share same location
-        response = sendCommandToServer("joe: get axe");
-        assertTrue(response.contains(this.FAIL_PREFIX), "Should not get from other's inv");
-
-        response = sendCommandToServer("joe: get potion");
-        assertTrue(response.contains("potion"), "Get potion should work");
+        this.assertCommandFail("joe: GET axe");
+        this.assertCommandSucceed("joe: get potion", "potion");
 
         // cannot see potion for both players
-        response = sendCommandToServer("simon: look");
-        assertFalse(response.contains("potion"), "Should not have potion in location");
+        this.assertCommandSucceed("simon: look", "potion", true);
     }
 
     // TEST: get with decorative words & unexpected ordering
     @Test
-    void testGetWithDecorativeWords() {
-        sendCommandToServer("simon: please find potion and get it");
-        String response = sendCommandToServer("simon: inv");
-        assertTrue(response.contains("potion"), "Decorative words should work for get");
+    void testWithDecorativeWords() {
+        this.assertCommandSucceed("simon: please find potion and get it", "potion");
+        this.assertCommandSucceed("simon: inv", "potion");
     }
 
     // TEST: get without any artefact
     @Test
-    void testGetWithoutArtefact() {
-        String response = sendCommandToServer("simon: get");
-        assertTrue(response.contains(this.FAIL_PREFIX),
-            "Get without artefact should fail");
+    void testWithoutArtefact() {
+        this.assertCommandFail("simon: get");
     }
 
     // TEST: get with invalid artefact
     @Test
-    void testGetWithInvalidArtefact() {
+    void testWithInvalidArtefact() {
         // get with non-exist artefact
-        String response = sendCommandToServer("simon: get xyz");
-        assertTrue(response.contains(this.FAIL_PREFIX),
-            "Should fail to get invalid artefact 'xyz'");
+        this.assertCommandFail("simon: get xyz");
 
         // get with wrong target type: location
-        response = sendCommandToServer("simon: get forest");
-        assertTrue(response.contains(this.FAIL_PREFIX), "Should fail to get a location");
+        this.assertCommandFail("simon: get forest");
 
         // get with wrong target type: player
-        sendCommandToServer("joe: look");
-        response = sendCommandToServer("simon: look");
-        assertTrue(response.contains("joe"), "Should see Joe in the location");
+        this.assertCommandSucceed("joe: look");
+        this.assertCommandSucceed("simon: look", "joe");
 
-        response = sendCommandToServer("simon: get joe");
-        assertTrue(response.contains(this.FAIL_PREFIX), "Should fail to get a player");
+        this.assertCommandFail("simon: get joe");
 
         // get with wrong target type: character
-        sendCommandToServer("joe: goto forest");
-        sendCommandToServer("joe: get key");
-        sendCommandToServer("joe: goto cabin");
-        sendCommandToServer("joe: unlock with key");
+        this.assertCommandSucceed("joe: goto forest");
+        this.assertCommandSucceed("joe: get key");
+        this.assertCommandSucceed("joe: goto cabin");
+        this.assertCommandSucceed("joe: unlock with key");
 
-        response = sendCommandToServer("simon: look");
-        assertTrue(response.contains("cellar"), "Should see path to cellar");
+        this.assertCommandSucceed("simon: look", "cellar");
 
-        sendCommandToServer("joe: goto cellar");
-        response = sendCommandToServer("joe: look").toLowerCase();
-        assertTrue(response.contains("elf"), "Should see elf in cellar");
-        response = sendCommandToServer("simon: look");
-        assertFalse(response.contains("joe"), "Should not see Joe at cabin");
+        this.assertCommandSucceed("joe: goto cellar");
+        this.assertCommandSucceed("joe: look", "elf");
+        this.assertCommandSucceed("simon: goto cellar");
+        this.assertCommandSucceed("simon: look", "joe");
 
-        response = sendCommandToServer("simon: get elf");
-        assertTrue(response.contains(this.FAIL_PREFIX), "Should fail to get a character");
+        this.assertCommandFail("simon: get elf");
     }
 
     // TEST: get with an artefact from other place
     @Test
-    void testGetArtefactFromOtherLocation() {
-        String response = sendCommandToServer("simon: get key");
-        assertTrue(response.contains(this.FAIL_PREFIX),
-            "Should get artefact from other location");
-        response = sendCommandToServer("simon: inv");
-        assertFalse(response.contains("key"), "Should not have key in inventory");
+    void testArtefactFromOtherLocation() {
+        // should not get key in other place
+        this.assertCommandFail("simon: get key");
+        this.assertCommandSucceed("simon: inv", "key", true);
 
-        sendCommandToServer("simon: goto forest");
-        response = sendCommandToServer("simon: get key");
-        assertTrue(response.contains("key"), "Should get key from right location");
-        response = sendCommandToServer("simon: inv");
-        assertTrue(response.contains("key"), "Should have key in inventory");
+        // should get key from right location
+        this.assertCommandSucceed("simon: goto forest");
+        this.assertCommandSucceed("simon: get key", "key");
+        this.assertCommandSucceed("simon: inv", "key");
     }
 
     // TEST: get with multiple artefacts
     @Test
-    void testGetMultipleArtefacts() {
+    void testMultipleArtefacts() {
         // before get
-        String response = sendCommandToServer("simon: inv");
-        assertFalse(response.contains("axe"), "Should not have axe in inventory");
+        this.assertCommandSucceed("simon: inv", "axe", true);
 
         // get multiple artefacts
-        response = sendCommandToServer("simon: get potion axe");
-        assertTrue(response.contains(this.FAIL_PREFIX),
-            "Should not get multiple artefacts");
+        this.assertCommandFail("simon: get potion axe");
 
         // get artefact with other artefact in other location
-        response = sendCommandToServer("simon: get potion key");
-        assertTrue(response.contains("potion"),
-            "Should get artefact with artefact in other location");
-        response = sendCommandToServer("simon: inv");
-        assertTrue(response.contains("potion"), "Should have axe in inventory");
+        this.assertCommandSucceed("simon: get potion key", "potion");
+        this.assertCommandSucceed("simon: inv", "potion");
 
         // get artefact with non-entity word
-        response = sendCommandToServer("simon: get axe abc");
-        assertTrue(response.contains("axe"), "Should get artefact with non-entity word");
-        response = sendCommandToServer("simon: inv");
-        assertTrue(response.contains("axe"), "Should have axe in inventory");
+        this.assertCommandSucceed("simon: get axe abc", "axe");
+        this.assertCommandSucceed("simon: inv", "axe");
     }
 
     // TEST: get artefact which is in other location
     @Test
-    void testGetArtefactInOtherMap() {
+    void testArtefactInOtherMap() {
         // before get
-        String response = sendCommandToServer("simon: inv");
-        assertFalse(response.contains("key"), "Should not have key in inventory");
-        response = sendCommandToServer("simon: see");
-        assertFalse(response.contains("key"), "Should not have key in current location");
+        this.assertCommandSucceed("simon: inv", "key", true);
+        this.assertCommandSucceed("simon: look", "key", true);
 
         // get from wrong location
-        response = sendCommandToServer("simon: get key");
-        assertTrue(response.contains(this.FAIL_PREFIX),
-            "Should not get artefact from wrong location");
+        this.assertCommandFail("simon: get key");
 
         // move to right location & get
-        sendCommandToServer("simon: goto forest");
-        response = sendCommandToServer("simon: get key");
-        assertTrue(response.contains("key"), "Should get key in right location");
-        response = sendCommandToServer("simon: inv");
-        assertTrue(response.contains("key"), "Should not have key in inventory");
+        this.assertCommandSucceed("simon: goto forest");
+        this.assertCommandSucceed("simon: get key", "key");
+        this.assertCommandSucceed("simon: inv", "key");
     }
 
     // TEST: get artefact which is in storeroom
     @Test
-    void testGetArtefactInStoreroom() {
+    void testArtefactInStoreroom() {
         // cannot get artefact in storeroom
-        String response = sendCommandToServer("simon: get log");
-        assertTrue(response.contains(this.FAIL_PREFIX),
-            "Should not get artefact from storeroom");
+        this.assertCommandFail("simon: get log");
 
         // prepare log
-        sendCommandToServer("simon: get axe");
-        sendCommandToServer("simon: goto forest");
-        sendCommandToServer("simon: axe cutdown");
+        this.assertCommandSucceed("simon: get axe");
+        this.assertCommandSucceed("simon: goto forest");
+        this.assertCommandSucceed("simon: axe cutdown");
 
         // get log
-        response = sendCommandToServer("simon: get log");
-        assertTrue(response.contains("log"), "Should get log after producing");
-
-        response = sendCommandToServer("simon: inv");
-        assertTrue(response.contains("log"), "Should have log in inventory");
+        this.assertCommandSucceed("simon: get log", "log");
+        this.assertCommandSucceed("simon: inv", "log");
     }
 
     // TEST: get artefact which is in own inventory
     @Test
-    void testGetArtefactInOwnInventory() {
-        String response = sendCommandToServer("simon: get potion");
-        assertTrue(response.contains("potion"), "Should get potion successfully");
+    void testArtefactInOwnInventory() {
+        this.assertCommandSucceed("simon: get potion", "potion");
 
-        response = sendCommandToServer("simon: get potion");
-        assertTrue(response.contains(this.FAIL_PREFIX), "Should not get from inventory");
+        // should not get from inventory
+        this.assertCommandFail("simon: get potion");
 
-
-        response = sendCommandToServer("joe: get potion");
-        assertTrue(response.contains(this.FAIL_PREFIX), "Should not get from other's inv");
+        // should not get from other's inv
+        this.assertCommandFail("joe: get potion");
     }
 }

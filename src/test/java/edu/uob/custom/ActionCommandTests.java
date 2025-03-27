@@ -1,55 +1,63 @@
-package edu.uob;
+package edu.uob.custom;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 public class ActionCommandTests extends BaseSTAGTests {
-    /* Actions */
-    // TODO: TEST: trigger in two word, e.g. "cut down"
+    // TEST: basic trigger, trigger in two word, invalid trigger
+    @Test
+    @Tag("extended")
+    void testTrigger() {
+        // all valid triggers
+        String[] validTriggers = {"chop", "cut", "cut down"};
+        for (String trigger : validTriggers) {
+            this.resetServer(true);
+            this.prepareCut("yang-yang");
+
+            String cmd = new StringBuilder()
+                .append("yang-yang: ").append(trigger).append(" tree").toString();
+            this.assertCommandSucceed(cmd);
+        }
+
+        // invalid trigger
+        String[] invalidTriggers = {"cutting", "hit", "cutdown"};
+        for (String invalidTrigger : invalidTriggers) {
+            this.resetServer(true);
+            this.prepareCut("yang-yang");
+
+            String cmd = new StringBuilder()
+                .append("yang-yang: ").append(invalidTrigger).append(" tree").toString();
+            this.assertCommandFail(cmd);
+        }
+    }
 
     // TEST: subjects mentioned in command are more than that in action
     @Test
     void testMoreSubjectsThanAction() {
         // prepare cut
-        sendCommandToServer("yang-yang: get axe");
-        sendCommandToServer("yang-yang: goto forest");
-
+        this.prepareCut("yang-yang");
         // cut with extra subject
-        String response = sendCommandToServer("yang-yang: cut tree key");
-        assertTrue(response.contains(this.FAIL_PREFIX),
-            "Extra subject 'key' should prevent match");
-
+        this.assertCommandFail("yang-yang: cut tree key");
         // cut without extra subject
-        response = sendCommandToServer("yang-yang: cut tree");
-        assertFalse(response.contains(this.FAIL_PREFIX), "Cut should work");
+        this.assertCommandSucceed("yang-yang: cut tree");
     }
 
     // TEST: only one trigger and only one subject in command, and is valid situation
     @Test
     void testSingleTriggerSingleSubjectValid() {
         // prepare cut
-        sendCommandToServer("ken: get axe");
-        sendCommandToServer("ken: goto forest");
-
+        this.prepareCut("ken");
         // cut with signe trigger & subject
-        String response = sendCommandToServer("ken: cut tree").toLowerCase();
-        assertTrue(response.contains("you cut"),
-            "Single trigger and subject should work when valid");
+        this.assertCommandSucceed("ken: cut tree", ACTION_SUCCESS_MSG.CUT.getValue());
     }
 
     // TEST: only one trigger and only one subject in command, and isn't valid situation
     @Test
     void testSingleTriggerSingleSubjectInvalid() {
         // prepare cut
-        sendCommandToServer("ken: get axe");
-        sendCommandToServer("ken: goto forest");
-
+        this.prepareCut("ken");
         // cut
-        String response = sendCommandToServer("ken: cut potion");
-        assertTrue(response.contains(this.FAIL_PREFIX),
-            "Invalid subject 'potion' should fail");
+        this.assertCommandFail("ken: cut potion");
     }
 
     // TODO: TEST: 2 actions have same trigger
@@ -60,28 +68,55 @@ public class ActionCommandTests extends BaseSTAGTests {
     @Test
     void testMatchSubjectInInventory() {
         // prepare cut
-        sendCommandToServer("ken: get axe");
-        sendCommandToServer("ken: goto forest");
-
+        this.prepareCut("ken");
         // cut
-        String response = sendCommandToServer("ken: cut with axe").toLowerCase();
-        assertTrue(response.contains("you cut"), "Cut should work");
+        this.assertCommandSucceed("ken: cut with axe", ACTION_SUCCESS_MSG.CUT.getValue());
     }
 
     // TEST: match subject is in location as a furniture
     @Test
     void testMatchFurnitureSubject() {
         // prepare unlock
-        sendCommandToServer("ken: goto forest");
-        sendCommandToServer("ken: get key");
-        sendCommandToServer("ken: goto cabin");
-
+        this.prepareUnlock("ken");
         // unlock with subject as a furniture
-        String response = sendCommandToServer("ken: open by key").toLowerCase();
-        assertTrue(response.contains("you unlock"), "Unlock should work");
+        this.assertCommandSucceed("ken: open by key", ACTION_SUCCESS_MSG.UNLOCK.getValue());
     }
 
-    // TODO: TEST: match subject is in location as a character
+    // TEST: match subject is in location as a character
+    @Test
+    @Tag("extended")
+    void testMatchSubjectAsCharacter() {
+        String[] commands = {
+            "fight elf",
+            "elf fight",
+            "hit elf",
+            "attack elf",
+            "fight and fight elf",
+            "hit and attack elf",
+            "please hit ot attack elf here",
+        };
+        for (String cmd : commands) {
+            this.resetServer(true);
+            this.gotoCellar("lin");
+            this.assertCommandSucceed("lin: health", "3");
+            this.assertCommandSucceed(
+                this.cmdWithPlayer("lin", cmd), ACTION_SUCCESS_MSG.FIGHT.getValue());
+            this.assertCommandSucceed("lin: health", "2");
+        }
+
+        String[] invalidCommands = {
+            "fight elfA",
+            "fight",
+            "elf",
+            "fight elf with axe",
+            "fight elf in forest"
+        };
+        for (String invalidCmd : invalidCommands) {
+            this.resetServer(true);
+            this.gotoCellar("lin");
+            this.assertCommandFail(this.cmdWithPlayer("lin", invalidCmd));
+        }
+    }
 
     // TODO: TEST: match subject is in location as a path
 
@@ -89,62 +124,143 @@ public class ActionCommandTests extends BaseSTAGTests {
     @Test
     void testMatchSubjectInOthersInventory() {
         // prepare unlock
-        sendCommandToServer("wang: get axe");
-        sendCommandToServer("wang: goto forest");
-        sendCommandToServer("ken: goto forest");
+        this.assertCommandSucceed("wang: get axe");
+        this.assertCommandSucceed("wang: goto forest");
+        this.assertCommandSucceed("ken: goto forest");
 
         // unlock with subject as a furniture
-        String response = sendCommandToServer("ken: cutdown tree");
-        assertTrue(response.contains(this.FAIL_PREFIX),
-            "Should not cut with subject in other's inventory");
-
-        response = sendCommandToServer("wang: cutdown tree").toLowerCase();
-        assertTrue(response.contains("you cut"), "Should cut tree successfully");
+        this.assertCommandFail("ken: cutdown tree");
+        this.assertCommandSucceed("wang: cutdown tree", ACTION_SUCCESS_MSG.CUT.getValue());
     }
 
     // TEST: match subject is in other location as an artefact
+    @Test
+    void testMatchSubjectInOtherLocationArtefact() {
+        this.assertCommandSucceed("zoe: goto forest");
+        this.assertCommandFail("zoe: open with key");
+    }
 
     // TEST: match subject is in other location as a furniture
+    @Test
+    void testMatchSubjectInOtherLocationFurniture() {
+        this.assertCommandSucceed("zoe: goto forest");
+        this.assertCommandSucceed("zoe:get key");
+        this.assertCommandFail("zoe: open with key");
+    }
 
     // TEST: match subject is in other location as a character
+    @Test
+    @Tag("extended")
+    void testMatchSubjectInOtherLocationCharacter() {
+        this.assertCommandFail("simon: fight elf");
+    }
 
-    // TEST: match subject is in other location as a path
+    // TODO: TEST: match subject is in other location as a path
 
     // TEST: match consume is in inventory
+    @Test
+    @Tag("extended")
+    void testMatchConsumeInInventory() {
+        this.assertCommandSucceed("simon: get potion");
+        this.assertCommandSucceed("simon: inv", "potion");
+
+        this.assertCommandSucceed("simon: drink potion", ACTION_SUCCESS_MSG.DRINK.getValue());
+        this.assertCommandSucceed("simon: inv", "potion", true);
+    }
 
     // TEST: match consume is in location as an artefact
+    @Test
+    @Tag("extended")
+    void testMatchConsumeInLocation() {
+        this.assertCommandSucceed("simon: look", "potion");
+        this.assertCommandSucceed("simon: drink potion", ACTION_SUCCESS_MSG.DRINK.getValue());
+        this.assertCommandSucceed("simon: look", "potion", true);
+    }
 
     // TEST: match consume is in location as a furniture
+    @Test
+    @Tag("extended")
+    void testMatchConsumeInLocationFurniture() {
+        this.prepareCut("simon");
+        this.assertCommandSucceed("simon: look", "tree");
+        this.assertCommandSucceed("simon: cut tree", ACTION_SUCCESS_MSG.CUT.getValue());
+        this.assertCommandSucceed("simon: look", "tree", true);
+    }
 
-    // TEST: match consume is in location as a character
+    // TODO: TEST: match consume is in location as a character
 
-    // TEST: match consume is in location as a path
+    // TODO: TEST: match consume is in location as a path
 
     // TEST: match consume is in other player's inventory
+    @Test
+    @Tag("extended")
+    void testMatchConsumeInOtherPlayerInventory() {
+        this.assertCommandSucceed("wang: get potion");
+        this.assertCommandFail("simon: drink potion");
+        this.assertCommandSucceed("wang: drink potion", ACTION_SUCCESS_MSG.DRINK.getValue());
+    }
 
     // TEST: match consume is in other location as an artefact
+    @Test
+    @Tag("extended")
+    void testMatchConsumeInOtherLocationArtefact() {
+        this.assertCommandSucceed("simon: goto forest");
+        this.assertCommandFail("simon: drink potion");
+    }
 
     // TEST: match consume is in other location as a furniture
+    @Test
+    @Tag("extended")
+    void testMatchConsumeInOtherLocationFurniture() {
+        this.prepareCut("simon");
 
-    // TEST: match consume is in other location as a character
+        this.assertCommandSucceed("simon: goto cabin");
+        this.assertCommandFail("simon: cut tree");
 
-    // TEST: match consume is in other location as a path
+        this.assertCommandSucceed("simon: goto forest");
+        this.assertCommandSucceed("simon: cut tree");
+    }
+
+    // TODO: TEST: match consume is in other location as a character
+
+    // TODO: TEST: match consume is in other location as a path
 
     // TEST: match produce is in storeroom as an artefact
+    @Test
+    @Tag("extended")
+    void testMatchProduceInStoreroomArtefact() {
+        this.prepareCut("simon");
+        this.assertCommandSucceed("simon: cut tree", ACTION_SUCCESS_MSG.CUT.getValue());
+        this.assertCommandSucceed("simon: get log", "log");
+    }
 
     // TEST: match produce is in storeroom as a furniture
+    @Test
+    @Tag("extended")
+    void testMatchProduceInInventory() {
+        this.assertCommandSucceed("simon: get coin");
+        this.gotoCellar("simon");
+        this.assertCommandSucceed("simon: pay elf", ACTION_SUCCESS_MSG.PAY.getValue());
+        this.assertCommandSucceed("simon: look", "shovel");
+    }
 
-    // TEST: match produce is in storeroom as a character
+    // TODO: TEST: match produce is in storeroom as a character
+    @Test
+    @Tag("extended")
+    void testMatchProduceInStoreroom() {
+        this.assertCommandSucceed("simon: goto forest");
+        this.assertCommandSucceed("simon: goto riverbank");
 
-    // TEST: match produce is in storeroom as a path
+        this.assertCommandSucceed("simon: look", "lumberjack", true);
+        this.assertCommandSucceed("simon: blow the horn", ACTION_SUCCESS_MSG.BLOW.getValue());
+        this.assertCommandSucceed("simon: look", "cutter");
+    }
 
-    // TEST: match produce is in one's inventory
+    // TODO: TEST: match produce is in one's inventory
 
-    // TEST: match produce is in other location as a furniture
+    // TODO: TEST: match produce is in other location as a furniture
 
-    // TEST: match produce is in other location as a character
+    // TODO: TEST: match produce is in other location as a character
 
-    // TEST: match produce is in other location as a path
-
-    // TEST: match 2 triggers in one action
+    // TODO: TEST: match produce is in other location as a path
 }

@@ -1,35 +1,46 @@
-package edu.uob;
+package edu.uob.custom;
 
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class InventoryCommandTests {
-    // TEST: call inventory with "inventory", "InvEntOry", "inv", "InV"
+public class InventoryCommandTests extends BaseSTAGTests {
+    // TEST: call inventory with valid & invalid cmd
     @Test
     void testBasicInventory() {
         String[] variants = {"inventory", "InvEntOry", "inv", "InV"};
         for (String variant : variants) {
-            String response = sendCommandToServer(
-                new StringBuilder().append("simon: ").append(variant).toString());
-            assertTrue(response.contains("inventory"),
-                "Inventory should works with 'inv' & 'inventory' and be case-insensitive");
+            String cmd = new StringBuilder().append("simon: ").append(variant).toString();
+            this.assertCommandSucceed(cmd, "inventory");
         }
 
         String[] failedVariants = {"inventory1", "InvEntOryz", "inv0", "InVZ"};
         for (String variant : failedVariants) {
-            String response = sendCommandToServer(
-                new StringBuilder().append("simon: ").append(variant).toString());
-            assertTrue(response.contains(this.FAIL_PREFIX),
-                "Inventory should fail when call with wrong text");
+            String cmd = new StringBuilder().append("simon: ").append(variant).toString();
+            this.assertCommandFail(cmd);
         }
+    }
+
+    // TEST: inventory with other players
+    @Test
+    void testWithMultiPlayer() {
+        // begging
+        this.assertCommandSucceed("Lily: inv", "nothing");
+
+        // get axe
+        this.assertCommandSucceed("Lily: get axe");
+        this.assertCommandSucceed("Lily: inv", "axe");
+
+        this.assertCommandSucceed(" liLY : inv", "axe");
+
+        this.assertCommandSucceed("John : inv", "axe", true);
+        this.assertCommandSucceed("John : inv", "nothing");
     }
 
     // TEST: call inventory with decorative words &  unexpected order
     @Test
-    void testInventoryWithDecorativeWords() {
-        String response = sendCommandToServer("simon: please show inventory");
-        assertTrue(response.contains("inventory"),
-            "Decorative words should work for inventory");
+    void testWithDecorativeWords() {
+        this.assertCommandSucceed("simon: please show inventory", "inventory");
     }
 }

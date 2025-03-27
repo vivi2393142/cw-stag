@@ -30,21 +30,19 @@ public class GameManager {
         return this.actions;
     }
 
-    public Location getLocation(String locationName) {return this.locations.get(locationName);}// TODO: check exist?
+    public Location getLocation(String locationName) {return this.locations.get(locationName);}
     public HashMap<String, Location> getLocations() {
         return this.locations;
     }
 
-    public Player getPlayer(String playerName) {return this.players.get(playerName);}// TODO: check exist?
-    public HashMap<String, Player> getPlayers() {
-        return this.players;
-    }
+    public Player getPlayer(String playerName) {return this.players.get(playerName);}
+    public HashMap<String, Player> getPlayers() {return this.players;}
 
-    public InteractableEntity getEntity(String entityName) {return this.entities.get(entityName);} // TODO: check exist?
+    public InteractableEntity getEntity(String entityName) {return this.entities.get(entityName);}
     public HashMap<String, InteractableEntity> getEntities() {return this.entities;}
 
     public Location getStoreroom() {
-        return this.getLocation(STOREROOM_NAME); // TODO: check exist?
+        return this.getLocation(STOREROOM_NAME);
     }
 
     public Location getStartLocation() {return this.startLocation;}

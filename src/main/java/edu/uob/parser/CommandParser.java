@@ -19,11 +19,12 @@ public class CommandParser {
         this.gameManager = gameManager;
     }
 
-    public Command parse(String commandStr) throws UserException, SystemException {
+    public Command parse(String cmdStr) throws UserException, SystemException {
+        String lowerCasedCmd = cmdStr.toLowerCase();
         // 1-1. get player name
-        int colonIdx = commandStr.indexOf(":");
+        int colonIdx = lowerCasedCmd.indexOf(":");
         if (colonIdx == -1) throw new UserException("Command should be start with player name");
-        String playerName = commandStr.substring(0, colonIdx);
+        String playerName = lowerCasedCmd.substring(0, colonIdx).trim();
         this.validatePlayer(playerName);
 
         // TODO: handle add player duplicated error
@@ -32,7 +33,7 @@ public class CommandParser {
         this.addPlayerIfNotExisted(playerName);
 
         // 2. get and trim reset command
-        String restCommand = commandStr.substring(colonIdx + 1).toLowerCase();
+        String restCommand = lowerCasedCmd.substring(colonIdx + 1).toLowerCase();
         if (restCommand.isEmpty()) throw new UserException("Command cannot be empty");
 
         // 3. try every command
@@ -107,13 +108,12 @@ public class CommandParser {
 
         // 1. valid command: at least one trigger
         if (!this.hasMatchingTrigger(action, restCommand)) return false;
-
         // 2. valid command: subjects
         if (!this.matchSubjectsInCommand(action, restCommand, player)) return false;
-
-        // 3. check produce available
-        return this.gameManager.isAllEntAvailable(
-            action.getProducedEntities(), this.gameManager.getStoreroom(), false, null);
+        // 3. check subjects available
+        if (!this.isSubjectSetAvailable(action.getSubjects(), player)) return false;
+        // 4. check produce available
+        return isProduceSetAvailable(action.getProducedEntities());
     }
 
     private boolean hasMatchingTrigger(GameAction action, String cmd) {
@@ -146,6 +146,44 @@ public class CommandParser {
         return hasSubject;
     }
 
+    private boolean isSubjectSetAvailable(Set<String> subjects, Player player) {
+        for (String subject : subjects) {
+            if (!this.isSubjectAvailable(subject, player)) return false;
+        }
+        return true;
+    }
+
+    private boolean isSubjectAvailable(String subject, Player player) {
+        Location currLocation = this.gameManager.getLocation(player.getLocation());
+
+        // 1. is in location as an entity
+        boolean isEntInLocation = currLocation.getInterEntities().contains(subject);
+        if (isEntInLocation) return true;
+
+        // 2. is in location as a path
+        boolean isPathInLocation = currLocation.getPaths().contains(subject);
+        if (isPathInLocation) return true;
+
+        // 3. is in player's inventory
+        return player.getInventories().contains(subject);
+    }
+
+    private boolean isProduceSetAvailable(Set<String> producedEntities) {
+        for (String producedEntity : producedEntities) {
+            if (!this.isProduceAvailable(producedEntity)) return false;
+        }
+        return true;
+    }
+
+    private boolean isProduceAvailable(String producedEntity) {
+        // 1. is any of location, or
+        Location targetLocation = this.gameManager.getLocation(producedEntity);
+        if (targetLocation != null) return true;
+
+        // 2. is in storeroom
+        return this.gameManager.getStoreroom().getInterEntities().contains(producedEntity);
+    }
+
     private boolean isAvailableEntity(GameEntity entity, Player player) {
         EntityType type = entity.getType();
         if (type == EntityType.LOCATION) return isAvailableEntity((Location) entity, player);
@@ -154,11 +192,16 @@ public class CommandParser {
     }
 
     private boolean isAvailableEntity(InteractableEntity targetEntity, Player player) {
+        if (targetEntity == null) return false;
+
         // 1. entity belong to player
         if (targetEntity.getType() == EntityType.ARTEFACT) {
             Artefact artefact = (Artefact) targetEntity;
-            boolean isBelong = artefact.getBelongPlayer().equalsIgnoreCase(player.getName());
-            if (isBelong) return true;
+            String belongPlayer = artefact.getBelongPlayer();
+            if (belongPlayer != null && !belongPlayer.isEmpty()) {
+                boolean isBelong = belongPlayer.equalsIgnoreCase(player.getName());
+                if (isBelong) return true;
+            }
         }
 
         // 2. entity in current location

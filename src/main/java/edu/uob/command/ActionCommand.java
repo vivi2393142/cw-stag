@@ -1,5 +1,6 @@
 package edu.uob.command;
 
+import edu.uob.EntityType;
 import edu.uob.GameAction;
 import edu.uob.GameManager;
 import edu.uob.entity.GameEntity;
@@ -48,11 +49,17 @@ public class ActionCommand extends Command {
         Set<GameEntity> consumedEntities = context.getConsumedEntities();
 
         for (GameEntity entity : consumedEntities) {
-            if (entity instanceof InteractableEntity interEntity) {
-                this.gameManager.moveInterEntity(interEntity.getName(), GameManager.STOREROOM_NAME);
-                removeInvIfApplicable(interEntity, context.getPlayer());
-            } else if (entity instanceof Location path) {
+            EntityType type = entity.getType();
+            if (type == EntityType.LOCATION) {
+                Location path = (Location) entity;
                 currLocation.removePath(path.getName());
+            } else if (type == EntityType.ARTEFACT
+                       || type == EntityType.FURNITURE
+                       || type == EntityType.CHARACTER
+            ) {
+                InteractableEntity interEntity = (InteractableEntity) entity;
+                this.gameManager.moveInterEntity(interEntity.getName(), GameManager.STOREROOM_NAME);
+                this.removeInvIfApplicable(interEntity, context.getPlayer());
             }
         }
     }
@@ -62,10 +69,16 @@ public class ActionCommand extends Command {
         Set<GameEntity> producedEntities = context.getProducedEntities();
 
         for (GameEntity entity : producedEntities) {
-            if (entity instanceof InteractableEntity interEntity) {
+            EntityType type = entity.getType();
+            if (type == EntityType.LOCATION) {
+                Location location = (Location) entity;
+                currLocation.addPath(location.getName());
+            } else if (type == EntityType.ARTEFACT
+                       || type == EntityType.FURNITURE
+                       || type == EntityType.CHARACTER
+            ) {
+                InteractableEntity interEntity = (InteractableEntity) entity;
                 this.gameManager.moveInterEntity(interEntity.getName(), currLocation.getName());
-            } else if (entity instanceof Location path) {
-                currLocation.addPath(path.getName());
             }
         }
     }
@@ -94,11 +107,13 @@ public class ActionCommand extends Command {
     }
 
     private void removeInvIfApplicable(InteractableEntity entity, Player player) {
-        if (entity instanceof Artefact artefact &&
-            Objects.equals(artefact.getBelongPlayer(), player.getName())) {
+        if (entity.getType() != EntityType.ARTEFACT) return;
+        
+        Artefact artefact = (Artefact) entity;
+        if (Objects.equals(artefact.getBelongPlayer(), player.getName())) {
             artefact.setBelongPlayer(null);
-            player.removeInventory(artefact.getName());
         }
+        player.removeInventory(artefact.getName());
     }
 
     private class ActionContext {
@@ -121,8 +136,28 @@ public class ActionCommand extends Command {
         }
 
         public Set<GameEntity> getProducedEntities() {
-            return this.gameManager.getEntSetInLocation(action.getProducedEntities(),
-                this.gameManager.getStoreroom(), false, null);
+            Set<GameEntity> producedEntities = new HashSet<>();
+            for (String entityName : action.getProducedEntities()) {
+                GameEntity targetEnt = this.getProducedEntity(entityName);
+                if (targetEnt != null) producedEntities.add(targetEnt);
+            }
+            return producedEntities;
+        }
+
+        public GameEntity getProducedEntity(String producedEntity) {
+            // 1. is a location, get from gameManager
+            Location location = this.gameManager.getLocation(producedEntity);
+            if (location != null) return location;
+
+            // 2. is other entity, get from storeroom
+            InteractableEntity entity = this.gameManager.getEntity(producedEntity);
+            if (entity != null &&
+                entity.getLocation().equalsIgnoreCase(GameManager.STOREROOM_NAME)
+            ) {
+                return entity;
+            }
+
+            return null;
         }
     }
 

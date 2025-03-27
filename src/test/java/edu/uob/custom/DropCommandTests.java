@@ -1,35 +1,30 @@
-package edu.uob;
+package edu.uob.custom;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-public class DropCommandTests {
-    // TEST: drop with "drop", "DROP", "dRoP"
+public class DropCommandTests extends BaseSTAGTests {
+    // TEST: drop with valid cmd
     @Test
     void testBasicDrop() {
         String[] variants = {"drop", "DROP", "dRoP"};
         for (String variant : variants) {
             // get axe
-            sendCommandToServer("simon: get axe");
-            String response = sendCommandToServer("simon: inv");
-            assertTrue(response.contains("axe"), "Should have axe in inventory");
+            this.assertCommandSucceed("simon: get axe", "axe");
+            this.assertCommandSucceed("simon: inv", "axe");
 
             // drop axe
-            response = sendCommandToServer(
-                new StringBuilder().append("simon: axe ").append(variant).toString());
-            assertTrue(response.contains("axe"), "Should drop axe");
-            response = sendCommandToServer("simon: inv");
-            assertFalse(response.contains("axe"), "Should not have axe in inventory");
+            String cmd = new StringBuilder().append("simon: axe ").append(variant).toString();
+            this.assertCommandSucceed(cmd, "axe");
+            this.assertCommandSucceed("simon: look", "axe");
+            this.assertCommandSucceed("simon: inv", "axe", true);
         }
 
         String[] failVariants = {"dropA", "DROP1", "dRoPz"};
-        sendCommandToServer("simon: get axe");
+        this.assertCommandSucceed("simon: get axe");
         for (String variant : failVariants) {
-            String response = sendCommandToServer(
-                new StringBuilder().append("simon: ").append(variant).append(" axe").toString());
-            assertTrue(response.contains(this.FAIL_PREFIX), "Should fail to drop axe");
+            String cmd = new StringBuilder()
+                .append("simon: ").append(variant).append(" axe").toString();
+            this.assertCommandFail(cmd);
         }
     }
 
@@ -37,125 +32,95 @@ public class DropCommandTests {
     @Test
     void testDropWithMultiPlayer() {
         // get axe
-        sendCommandToServer("ryan: get axe"); // case-insensitive
-        String response = sendCommandToServer("ryan: inv");
-        assertTrue(response.contains("axe"), "Should have axe in inventory");
-        response = sendCommandToServer("bob: look");
-        assertFalse(response.contains("axe"), "Should not have axe in location");
+        this.assertCommandSucceed("ryan: get axe"); // case-insensitive
+        this.assertCommandSucceed("ryan: inv", "axe");
+        this.assertCommandSucceed("bob: look", "axe", true);
 
         // drop axe
-        sendCommandToServer("ryan: DROP axe"); // case-insensitive
-        response = sendCommandToServer("bob: look");
-        assertTrue(response.contains("axe"), "Should have axe in location");
-        response = sendCommandToServer("ryAn: inv");
-        assertFalse(response.contains("axe"), "Should not have axe in inventory");
+        this.assertCommandSucceed("ryan: DROP axe"); // case-insensitive
+        this.assertCommandSucceed("bob: look", "axe");
+        this.assertCommandSucceed("ryAn: inv", "axe", true);
 
         // other player get axe
-        response = sendCommandToServer("BOB: get axe"); // case-insensitive
-        assertTrue(response.contains("axe"), "Should get axe");
-        response = sendCommandToServer("bob: inv");
-        assertTrue(response.contains("axe"), "Should have axe in inventory");
-        response = sendCommandToServer("RYAN: look");
-        assertFalse(response.contains("axe"), "Should not have axe in location");
+        this.assertCommandSucceed("BOB: get axe", "axe"); // case-insensitive
+        this.assertCommandSucceed("bob: inv", "axe");
+        this.assertCommandSucceed("RYAN: look", "aex", true);
     }
 
     // TEST: drop with decorative words & unexpected order
     @Test
     void testDropWithDecorativeWords() {
-        sendCommandToServer("simon: get potion");
-        sendCommandToServer("simon: please drop the potion");
-        String response = sendCommandToServer("simon: inv");
-        assertFalse(response.contains("potion"), "Decorative words should work for drop");
+        this.assertCommandSucceed("simon: get potion");
+        this.assertCommandSucceed("simon: please drop the potion");
+        this.assertCommandSucceed("simon: inv", "potion", true);
     }
 
     // TEST: drop without any artefact
     @Test
     void testDropWithoutArtefact() {
-        String response = sendCommandToServer("simon: drop");
-        assertTrue(response.contains(this.FAIL_PREFIX), "Drop without artefact should fail");
+        this.assertCommandFail("simon: drop");
     }
 
     // TEST: drop with invalid artefact
     @Test
     void testDropWithInvalidArtefact() {
-        sendCommandToServer("simon: get potion");
+        this.assertCommandSucceed("simon: get potion");
 
         // drop with non-exist artefact
-        String response = sendCommandToServer("simon: drop xyz");
-        assertTrue(response.contains(this.FAIL_PREFIX),
-            "Should fail to drop invalid artefact 'xyz'");
+        this.assertCommandFail("simon: drop xyz");
 
         // drop with artefact in other location
-        response = sendCommandToServer("simon: drop key");
-        assertTrue(response.contains(this.FAIL_PREFIX),
-            "Should fail to drop artefact in other location");
+        this.assertCommandFail("simon: drop key");
 
         // drop with artefact in storeroom
-        response = sendCommandToServer("simon: drop log");
-        assertTrue(response.contains(this.FAIL_PREFIX),
-            "Should fail to drop artefact in storeroom");
+        this.assertCommandFail("simon: drop log");
 
         // get with wrong target type: location
-        response = sendCommandToServer("simon: drop forest");
-        assertTrue(response.contains(this.FAIL_PREFIX), "Should fail to drop a location");
+        this.assertCommandFail("simon: drop forest");
 
         // drop with wrong target type: player
-        sendCommandToServer("alice: look");
-        response = sendCommandToServer("simon: look");
-        assertTrue(response.contains("alice"), "Should see Alice in the location");
+        this.assertCommandSucceed("alice: look");
+        this.assertCommandSucceed("simon: look", "alice");
 
-        response = sendCommandToServer("simon: drop alice");
-        assertTrue(response.contains(this.FAIL_PREFIX), "Should fail to drop a player");
+        this.assertCommandFail("simon: drop alice");
 
         // get with wrong target type: character
-        sendCommandToServer("alice wang: goto forest");
-        sendCommandToServer("alice wang: get key");
-        sendCommandToServer("alice wang: goto cabin");
-        sendCommandToServer("alice wang: unlock with key");
+        this.assertCommandSucceed("alice wang: goto forest");
+        this.assertCommandSucceed("alice wang: get key");
+        this.assertCommandSucceed("alice wang: goto cabin");
+        this.assertCommandSucceed("alice wang: unlock with key");
 
-        response = sendCommandToServer("simon: look");
-        assertTrue(response.contains("cellar"), "Should see path to cellar");
+        this.assertCommandSucceed("simon: look", "cellar");
 
-        sendCommandToServer("alice wang: goto cellar");
-        response = sendCommandToServer("alice wang: look").toLowerCase();
-        assertTrue(response.contains("elf"), "Should see elf in cellar");
-        response = sendCommandToServer("simon: look");
-        assertFalse(response.contains("alice wang"), "Should not see Alice at cabin");
+        this.assertCommandSucceed("alice wang: goto cellar");
+        this.assertCommandSucceed("alice wang: look", "elf");
+        this.assertCommandSucceed("simon: look", "alice wang", true);
 
-        response = sendCommandToServer("simon: drop elf");
-        assertTrue(response.contains(this.FAIL_PREFIX), "Should fail to drop a character");
+        this.assertCommandFail("simon: drop elf");
     }
 
     // TEST: drop with multiple artefacts
     @Test
     void testDropMultipleArtefacts() {
         // before drop
-        sendCommandToServer("alex: get axe");
-        sendCommandToServer("alex: get potion");
+        this.assertCommandSucceed("alex: get axe");
+        this.assertCommandSucceed("alex: get potion");
 
         // drop multiple artefact
-        String response = sendCommandToServer("simon: drop potion axe");
-        assertTrue(response.contains(this.FAIL_PREFIX),
-            "Should not drop multiple artefacts");
+        this.assertCommandFail("simon: drop potion axe");
 
         // drop artefact with other artefact in other's inventory
-        response = sendCommandToServer("alex: inv");
-        assertTrue(response.contains("potion"), "Should have axe in inventory");
-        assertTrue(response.contains("axe"), "Should have axe in inventory");
+        this.assertCommandSucceed("alex: inv", "potion");
+        this.assertCommandSucceed("alex: inv", "axe");
 
-        sendCommandToServer("lee: goto forest");
-        sendCommandToServer("lee: get key");
+        this.assertCommandSucceed("lee: goto forest");
+        this.assertCommandSucceed("lee: get key");
 
-        response = sendCommandToServer("alex: drop potion key");
-        assertTrue(response.contains("potion"),
-            "Should drop artefact with artefact in other location");
-        response = sendCommandToServer("alex: inv");
-        assertFalse(response.contains("potion"), "Should not have potion in inventory");
+        this.assertCommandSucceed("alex: drop potion key", "potion");
+        this.assertCommandSucceed("alex: inv", "potion", true);
 
         // drop artefact with non-entity word
-        response = sendCommandToServer("alex: drop axe abc");
-        assertTrue(response.contains("axe"), "Should drop artefact with non-entity word");
-        response = sendCommandToServer("alex: inv");
-        assertFalse(response.contains("axe"), "Should not have axe in inventory");
+        this.assertCommandSucceed("alex: drop axe abc", "axe");
+        this.assertCommandSucceed("alex: inv", "axe", true);
     }
 }
