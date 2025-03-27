@@ -4,54 +4,61 @@ import edu.uob.GameManager;
 import edu.uob.entity.GameEntity;
 import edu.uob.entity.Location;
 import edu.uob.entity.Player;
-import edu.uob.entity.interactableEntity.Artefact;
-import edu.uob.entity.interactableEntity.InteractableEntity;
+import edu.uob.exception.SystemException;
 
-import java.util.stream.Collectors;
+import java.util.Objects;
 
 public class LookCommand extends Command {
-    public LookCommand(String playerName) {
-        super(playerName);
+    public LookCommand(GameManager gameManager, String playerName) throws SystemException {
+        super(gameManager, playerName);
     }
 
     @Override
-    protected String executeCommand(GameManager gameManager) {
-        // TODO: executeCommand
-        Player player = this.getOrAddPlayer(gameManager);
+    protected String executeCommand() {
+        Player player = this.gameManager.getPlayer(this.player);
+        Location currLocation = this.gameManager.getLocation(player.getLocation());
 
-        // TODO: check if need response or not
-        // TODO: check fail message
-        return getMessage(player);
+        return getMessage(currLocation);
     }
 
-    private String getMessage(Player player) {
+    private String getMessage(Location currLocation) {
         StringBuilder result = new StringBuilder();
-        Location currLocation = player.getLocation();
 
-        // current location
-        result.append("You are in ");
-        result.append(currLocation.getDescription());
-        result.append(".\n");
-
-        // entities in location
-        result.append("You can see:\n");
-        result.append(
-                currLocation.getInteractableEntities().values().stream()
-                        .filter(this::isVisibleEntityInLocation)
-                        .map(GameEntity::getDescription)
-                        .collect(Collectors.joining("\n"))
-        );
-
-        // paths
-        result.append("\nYou can access from here:\n");
-        for (Location path : currLocation.getPaths().values()) {
-            result.append(path.getName());
-        }
+        this.appendLocationInfo(result, currLocation);
+        this.appendEntities(result, currLocation);
+        this.appendPaths(result, currLocation);
 
         return result.toString();
     }
 
-    private boolean isVisibleEntityInLocation(InteractableEntity entity) {
-        return entity.getType() != GameEntity.EntityType.ARTEFACT || ((Artefact) entity).getBelongPlayer() == null;
+    private void appendLocationInfo(StringBuilder result, Location currLocation) {
+        result.append("You are in ")
+            .append(currLocation.getDescription())
+            .append(".\n");
+    }
+
+    private void appendEntities(StringBuilder result, Location currLocation) {
+        result.append("You can see:\n");
+
+        // interactable entities
+        for (String entityName : currLocation.getInterEntities()) {
+            GameEntity entity = this.gameManager.getEntity(entityName);
+            if (entity != null) {
+                result.append(entity.getDescription());
+                result.append("\n");
+            }
+        }
+
+        // players
+        for (String playerName : currLocation.getPlayers()) {
+            if (!Objects.equals(playerName, this.player)) {
+                result.append("player - ").append(playerName).append("\n");
+            }
+        }
+    }
+
+    private void appendPaths(StringBuilder result, Location currLocation) {
+        result.append("You can access from here:\n")
+            .append(String.join("\n", currLocation.getPaths()));
     }
 }

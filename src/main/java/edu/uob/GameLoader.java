@@ -1,6 +1,5 @@
 package edu.uob;
 
-import edu.uob.data.ActionData;
 import edu.uob.data.EntityData;
 import edu.uob.data.PathData;
 import edu.uob.data.InteractableEntityData;
@@ -9,6 +8,8 @@ import edu.uob.entity.interactableEntity.Artefact;
 import edu.uob.entity.interactableEntity.Character;
 import edu.uob.entity.interactableEntity.Furniture;
 import edu.uob.entity.interactableEntity.InteractableEntity;
+import edu.uob.parser.ActionsParser;
+import edu.uob.parser.EntitiesParser;
 
 import java.io.File;
 
@@ -20,34 +21,45 @@ public class GameLoader {
     }
 
     public void load(File entitiesFile, File actionsFile) {
-        EntityData[] loadedLocations = {}; // TODO: get from file
-        PathData[] loadedPaths = {};
-        InteractableEntityData[] loadedEntities = {};  // TODO: get from file
-        ActionData[] loadedActions = {};  // TODO: get from file
+        try {
+            EntityData requireRoom = new EntityData(GameManager.STOREROOM_NAME,
+                "Storage for any entities not placed in the game");
+            EntitiesParser entityParser = new EntitiesParser(entitiesFile, requireRoom);
+            ActionsParser actionsParser = new ActionsParser(actionsFile);
 
-        this.load(loadedLocations, loadedPaths, loadedEntities, loadedActions);
+            EntityData[] loadedLocations = entityParser.getLocations();
+            PathData[] loadedPaths = entityParser.getPaths();
+            InteractableEntityData[] loadedEntities = entityParser.getEntities();
+            GameAction[] loadedActions = actionsParser.getActions();
+
+            this.load(loadedLocations, loadedPaths, loadedEntities, loadedActions);
+        } catch (Exception e) {
+            // TODO: handle error
+        }
     }
 
 
-    public void load(EntityData[] loadedLocations, PathData[] loadedPaths, InteractableEntityData[] loadedEntities,
-                     ActionData[] loadedActions) {
+    public void load(EntityData[] loadedLocations, PathData[] loadedPaths,
+                     InteractableEntityData[] loadedEntities, GameAction[] loadedActions) {
         this.loadLocations(loadedLocations, loadedPaths);
-        this.loadInteractableEntities(loadedEntities);
+        this.loadInterEntities(loadedEntities);
         this.loadActions(loadedActions);
     }
 
 
-    /* load locations */
+    /* Load Locations */
     public void loadLocations(EntityData[] loadedLocations, PathData[] loadedPaths) {
-        // TODO: verify storeroom
+        // load locations
         boolean isFirst = true;
-        for (EntityData loadedEntity : loadedLocations) {
-            Location newLocation = this.loadLocation(loadedEntity);
+        for (EntityData loadedLocation : loadedLocations) {
+            Location newLocation = this.loadLocation(loadedLocation);
             if (isFirst) {
                 this.gameManager.setStartLocation(newLocation);
                 isFirst = false;
             }
         }
+
+        // load path
         for (PathData loadedPath : loadedPaths) this.loadPath(loadedPath);
     }
 
@@ -59,36 +71,37 @@ public class GameLoader {
 
     public void loadPath(PathData data) {
         Location fromLocation = this.gameManager.getLocation(data.getFromLocationName());
-        Location toLocation = this.gameManager.getLocation(data.getToLocationName());
-        fromLocation.addPath(toLocation);
+        fromLocation.addPath(data.getToLocationName());
     }
 
-    /* load entities */
-    public void loadInteractableEntities(InteractableEntityData[] loadedEntities) {
-        for (InteractableEntityData loadedEntity : loadedEntities) this.loadInteractableEntity(loadedEntity);
+    /* Load Entities */
+    public void loadInterEntities(InteractableEntityData[] loadedEntities) {
+        for (InteractableEntityData entity : loadedEntities) this.loadInterEntity(entity);
     }
 
-    public void loadInteractableEntity(InteractableEntityData data) {
+    public void loadInterEntity(InteractableEntityData data) {
+        // TODO: add comment
+        String entityName = data.getName();
+        String targetLocationName = data.getLocationName();
         Location targetLocation = this.gameManager.getLocation(data.getLocationName());
         InteractableEntity newEntity = switch (data.getType()) {
-            case CHARACTER -> new Character(data, targetLocation);
-            case ARTEFACT -> new Artefact(data, targetLocation);
-            case FURNITURE -> new Furniture(data, targetLocation);
+            case CHARACTER -> new Character(data, targetLocationName);
+            case ARTEFACT -> new Artefact(data, targetLocationName);
+            case FURNITURE -> new Furniture(data, targetLocationName);
             // TODO: handle error
-            default -> throw new IllegalArgumentException("Invalid entity type for InteractableEntity.");
+            default -> throw new IllegalArgumentException("Invalid entity type");
         };
 
-        this.gameManager.getEntities().put(data.getName(), newEntity);
-        targetLocation.addInteractableEntity(newEntity);
+        this.gameManager.addEntity(newEntity);
+        targetLocation.addInterEntity(entityName);
     }
 
-    /* load actions */
-    public void loadActions(ActionData[] loadedActions) {
-        for (ActionData loadedAction : loadedActions) loadAction(loadedAction);
+    /* Load Actions */
+    public void loadActions(GameAction[] loadedActions) {
+        for (GameAction loadedAction : loadedActions) loadAction(loadedAction);
     }
 
-    public void loadAction(ActionData loadedAction) {
-        GameAction newAction = new GameAction(loadedAction);
-        this.gameManager.getActions().add(newAction);
+    public void loadAction(GameAction loadedAction) {
+        this.gameManager.getActions().add(loadedAction);
     }
 }

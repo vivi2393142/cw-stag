@@ -2,35 +2,32 @@ package edu.uob.command;
 
 import edu.uob.GameManager;
 import edu.uob.entity.Player;
+import edu.uob.exception.SystemException;
+import edu.uob.exception.UserException;
 
 public abstract class Command {
-    String playerName;
+    GameManager gameManager;
+    String player;
 
-    public Command(String playerName) {
-        this.playerName = playerName;
+    public Command(GameManager gameManager, String player) throws SystemException {
+        if (gameManager == null) throw new SystemException("Invalid GameManager");
+
+        this.gameManager = gameManager;
+        this.player = player;
     }
 
-    public final String execute(GameManager gameManager) {
-//        try {
-        return executeCommand(gameManager);
-//        } catch (Exception e) {
-//            StringBuilder builder = new StringBuilder();
-//            builder.append("Internal Server Error: ");
-//            builder.append(e.getMessage());
-//            return builder.toString();
-//        }
+    public final String execute() throws UserException, SystemException {
+        return executeCommand();
     }
 
-    protected abstract String executeCommand(GameManager gameManager);
+    protected abstract String executeCommand()
+        throws UserException, SystemException;
 
-    // TODO: handle add player duplicated error
-    // TODO: handle add playerName with keywords error
-    public Player getOrAddPlayer(GameManager gameManager) {
-        Player currPlayer = gameManager.getPlayer(this.playerName);
-        if (currPlayer == null) {
-            return gameManager.addPlayer(this.playerName);
-        } else {
-            return currPlayer;
-        }
+    /* Utility */
+    @Override
+    public String toString() {
+        StringBuilder result = new StringBuilder();
+        result.append("player: ").append(this.player);
+        return result.toString();
     }
 }

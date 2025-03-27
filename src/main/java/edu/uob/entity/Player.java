@@ -1,29 +1,29 @@
 package edu.uob.entity;
 
+import edu.uob.EntityType;
 import edu.uob.data.EntityData;
-import edu.uob.entity.interactableEntity.Artefact;
 
-import java.util.HashMap;
+import java.util.HashSet;
 
 public class Player extends GameEntity {
     public static final int MAX_HEALTH = 3;
     public static final int MIN_HEALTH = 0;
 
-    private HashMap<String, Artefact> inventories;
+    private HashSet<String> inventories;
     private int health;
-    private Location location;
+    private String location;
 
     // TODO: check if player need description
-    public Player(String name, Location location) {
+    public Player(String name, String locationName) {
         super(new EntityData(name, ""), EntityType.PLAYER);
 
-        this.inventories = new HashMap<>();
+        this.inventories = new HashSet<>();
         this.health = MAX_HEALTH;
-        this.location = location;
+        this.location = locationName;
     }
 
     /* Getter */
-    public HashMap<String, Artefact> getInventories() {
+    public HashSet<String> getInventories() {
         return this.inventories;
     }
 
@@ -31,36 +31,31 @@ public class Player extends GameEntity {
         return this.health;
     }
 
-    public Location getLocation() {
+    public String getLocation() {
         return this.location;
     }
 
     /* Update */
+
     public void addHealth(int addedHealth) {
-        this.health = Math.max(MAX_HEALTH, this.health + addedHealth);
+        this.health = Math.min(MAX_HEALTH, this.health + addedHealth);
     }
 
     public void deductHealth(int deductedHealth) {
-        this.health = Math.min(MIN_HEALTH, this.health - deductedHealth);
+        this.health = Math.max(MIN_HEALTH, this.health - deductedHealth);
     }
 
-    public void setLocation(Location location) {
+    public void resetHealth() {
+        this.health = MAX_HEALTH;
+    }
+
+    public void setLocation(String location) {
         this.location = location;
     }
 
-    public void moveLocation(Location newLocation) {
-        this.location.removePlayer(this);
-        this.location = newLocation;
-        newLocation.addPlayer(this);
-
-        for (Artefact inventory : this.inventories.values()) {
-            inventory.moveLocation(newLocation);
-        }
-    }
-
     /* Creation */
-    public void addInventory(Artefact inventory) {
-        this.inventories.put(inventory.getName(), inventory); // TODO: check existe?
+    public void addInventory(String inventoryName) {
+        this.inventories.add(inventoryName); // TODO: check existe?
     }
 
     /* Deletion */
@@ -68,7 +63,14 @@ public class Player extends GameEntity {
         this.inventories.remove(inventoryName); // TODO: check existe?
     }
 
-    public void removeInventory(Artefact inventory) {
-        this.inventories.remove(inventory.getName()); // TODO: check existe?
+    /* Utility */
+    @Override
+    public String toString() {
+        StringBuilder result = new StringBuilder();
+        result.append(super.toString()).append("\n");
+        result.append("inventories: ").append(this.inventories.toString()).append("\n");
+        result.append("health: ").append(this.health).append("\n");
+        result.append("location: ").append(this.location);
+        return result.toString();
     }
 }

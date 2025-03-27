@@ -1,82 +1,71 @@
 package edu.uob.entity;
 
+import edu.uob.EntityType;
 import edu.uob.data.EntityData;
-import edu.uob.entity.interactableEntity.InteractableEntity;
 
-import java.util.HashMap;
+import java.util.HashSet;
 
 public class Location extends GameEntity {
-    private HashMap<String, InteractableEntity> interactableEntities;
-    private HashMap<String, Player> players;
-    private HashMap<String, Location> paths;
+    private HashSet<String> interactableEntities;
+    private HashSet<String> players;
+    private HashSet<String> paths;
 
     public Location(EntityData data) {
         super(data, EntityType.LOCATION);
 
-        this.interactableEntities = new HashMap<>();
-        this.players = new HashMap<>();
-        this.paths = new HashMap<>(); // TODO: should load after creation
+        this.interactableEntities = new HashSet<>();
+        this.players = new HashSet<>();
+        this.paths = new HashSet<>(); // TODO: should load after creation
     }
 
     /* Getter */
-    public HashMap<String, InteractableEntity> getInteractableEntities() {
+    public HashSet<String> getInterEntities() {
         return this.interactableEntities;
     }
-
-    public HashMap<String, Player> getPlayers() {
+    public HashSet<String> getPaths() {
+        return this.paths;
+    }
+    public HashSet<String> getPlayers() {
         return this.players;
     }
 
-    public HashMap<String, Location> getPaths() {
-        return this.paths;
-    }
-
-
-    public Location getPath(String targetLocationName) {
-        return this.paths.get(targetLocationName);
-    }
-
     /* Creation */
-    public void addInteractableEntity(InteractableEntity entity) {
-        this.interactableEntities.put(entity.getName(), entity); // TODO: handle error
+    // TODO: handle error
+    public void addInterEntity(String entityName) {this.interactableEntities.add(entityName);}
+
+    public void addPlayer(String playerName) {
+        this.players.add(playerName); // TODO: handle error
     }
 
-    public void addPlayer(Player player) {
-        this.players.put(player.getName(), player); // TODO: handle error
+    public void addPath(String pathName) { // TODO: check to add by Location[] or String[]
+        this.paths.add(pathName); // TODO: handle error
     }
 
-    public void addPath(Location path) { // TODO: check to add by Location[] or String[]
-        this.paths.put(path.getName(), path); // TODO: handle error
-    }
-
-    public void addPath(Location[] paths) {
-        for (Location path : paths) {
-            this.addPath(path);
-        }
+    public void addPaths(String[] paths) {
+        for (String pathName : paths) this.addPath(pathName);
     }
 
     /* Deletion */
-    public void removeInteractableEntity(String entityName) { // TODO: check exist or not?
-        this.interactableEntities.remove(entityName); // TODO: handle error
-    }
+    // TODO: check exist or not?
+    // TODO: handle error
+    public void removeInterEntity(String name) {this.interactableEntities.remove(name);}
 
-    public void removeInteractableEntity(InteractableEntity entity) { // TODO: check exist or not?
-        this.removeInteractableEntity(entity.getName()); // TODO: handle error
-    }
-
-    public void removePlayer(String playerName) { // TODO: check exist or not?
-        this.players.remove(playerName); // TODO: handle error
-    }
-
-    public void removePlayer(Player player) { // TODO: check exist or not?
-        this.removePlayer(player.getName()); // TODO: handle error
-    }
+    // TODO: check exist or not?
+    // TODO: handle error
+    public void removePlayer(String playerName) {this.players.remove(playerName);}
 
     public void removePath(String pathName) { // TODO: check exist or not?
         this.paths.remove(pathName); // TODO: handle error
     }
 
-    public void removePath(Location path) { // TODO: check exist or not?
-        this.removePath(path.getName()); // TODO: handle error
+    /* Utility */
+    @Override
+    public String toString() {
+        StringBuilder result = new StringBuilder();
+        result.append(super.toString()).append("\n");
+        result.append("entities: ").append(this.interactableEntities.toString()).append("\n");
+        result.append("players: ").append(this.players.toString()).append("\n");
+        result.append("paths: ").append(this.paths.toString());
+        return result.toString();
     }
 }

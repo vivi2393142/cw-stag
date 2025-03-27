@@ -1,12 +1,13 @@
 package edu.uob.data;
 
-import edu.uob.entity.GameEntity;
+import edu.uob.EntityType;
 
 public class InteractableEntityData extends EntityData {
     private String locationName;
-    private GameEntity.EntityType type;
+    private EntityType type;
 
-    public InteractableEntityData(String name, String description, String locationName, GameEntity.EntityType type) {
+    public InteractableEntityData(String name, String description, String locationName,
+                                  EntityType type) {
         super(name, description);
         this.locationName = locationName;
         this.type = type;
@@ -16,7 +17,7 @@ public class InteractableEntityData extends EntityData {
         return this.locationName;
     }
 
-    public GameEntity.EntityType getType() {
+    public EntityType getType() {
         return this.type;
     }
 }

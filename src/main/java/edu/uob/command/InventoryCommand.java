@@ -2,30 +2,28 @@ package edu.uob.command;
 
 import edu.uob.GameManager;
 import edu.uob.entity.Player;
-import edu.uob.entity.interactableEntity.Artefact;
+import edu.uob.exception.SystemException;
 
-import java.util.HashMap;
+import java.util.HashSet;
 
 public class InventoryCommand extends Command {
-    public InventoryCommand(String playerName) {
-        super(playerName);
+    public InventoryCommand(GameManager gameManager, String playerName) throws SystemException {
+        super(gameManager, playerName);
     }
 
     @Override
-    protected String executeCommand(GameManager gameManager) {
-        // TODO: executeCommand
-        Player player = this.getOrAddPlayer(gameManager);
-        HashMap<String, Artefact> inventories = player.getInventories();
+    protected String executeCommand() {
+        Player player = this.gameManager.getPlayer(this.player);
+        HashSet<String> inventories = player.getInventories();
 
         return getMessage(inventories);
     }
 
-    private String getMessage(HashMap<String, Artefact> inventories) {
-        StringBuilder result = new StringBuilder();
-        result.append("You have ");
+    private String getMessage(HashSet<String> inventories) {
+        StringBuilder result = new StringBuilder().append("You have ");
 
         if (inventories.isEmpty()) result.append("nothing");
-        else result.append(String.join(",", inventories.keySet()));
+        else result.append(String.join(",", inventories));
 
         result.append(" in your inventory.");
         return result.toString();
