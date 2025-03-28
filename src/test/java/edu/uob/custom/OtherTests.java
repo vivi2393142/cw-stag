@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Test;
 
 public class OtherTests extends BaseSTAGTests {
     /* Player */
+    // TODO: TEST: player name same as entity
+
     // TEST: command should start with player name like "xxx: xxx"
     @Test
     void testCommandMustStartWithPlayerName() {
@@ -167,12 +169,6 @@ public class OtherTests extends BaseSTAGTests {
 
     // TEST: have built-in keyword & custom action trigger in 1 command?
 
-    /* Parser */
-    // TEST: parse different actionsFiles
-    // TEST: should be all lowercase after parse actionsFiles
-
-    // TEST: parse different entitiesFiles
-    // TEST: should be all lowercase after parse entitiesFiles
 
     /* Other */
     // TEST: add two same subjects to every kind of commands

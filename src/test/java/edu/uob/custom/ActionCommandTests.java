@@ -263,4 +263,8 @@ public class ActionCommandTests extends BaseSTAGTests {
     // TODO: TEST: match produce is in other location as a character
 
     // TODO: TEST: match produce is in other location as a path
+
+    // TODO: TEST: map 2 actions should fail
+
+    // TODO: TEST: mention two same subject should not effect
 }

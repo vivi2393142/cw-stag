@@ -2,6 +2,8 @@ package edu.uob.parser;
 
 import edu.uob.GameAction;
 import edu.uob.Keyword;
+import edu.uob.ValueUtils;
+import edu.uob.exception.UserException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -37,7 +39,7 @@ public class ActionsParser {
         return root.getChildNodes();
     }
 
-    private void parse() {
+    private void parse() throws UserException {
         Set<GameAction> actions = new HashSet<>();
 
         // only the odd items are actually actions
@@ -54,6 +56,11 @@ public class ActionsParser {
 
             Set<String> produced = this.getAttrFromAction(action, Tag.PRODUCED, Tag.ENTITY);
             int producedHealth = this.retrieveHealth(produced); // retrieve health from produced
+
+            this.validateNoKeyword(triggers);
+            this.validateNoKeyword(subjects);
+            this.validateNoKeyword(consumed);
+            this.validateNoKeyword(produced);
 
             GameAction newAction = new GameAction(triggers, subjects,
                 consumedHealth, producedHealth, consumed, produced, narration);
@@ -88,5 +95,14 @@ public class ActionsParser {
             return 1;
         }
         return 0;
+    }
+
+    /* Validate */
+    private void validateNoKeyword(Set<String> inputList) throws UserException {
+        for (String input : inputList) {
+            if (ValueUtils.matchAnyKeyword(input)) {
+                throw new UserException("Cannot use keyword in action");
+            }
+        }
     }
 }

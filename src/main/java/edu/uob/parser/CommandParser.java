@@ -91,15 +91,20 @@ public class CommandParser {
     }
 
     private ActionCommand tryParseAction(String restCommand, String player)
-        throws SystemException {
+        throws UserException, SystemException {
         HashSet<GameAction> actions = this.gameManager.getActions();
 
+        ActionCommand matchedActionCommand = null; // TODO: too nested?
         for (GameAction action : actions) {
             if (this.matchAction(action, restCommand, player)) {
-                return new ActionCommand(this.gameManager, player, action);
+                if (matchedActionCommand == null) {
+                    matchedActionCommand = new ActionCommand(this.gameManager, player, action);
+                } else {
+                    throw new UserException("Cannot match multiple actions at the same time");
+                }
             }
         }
-        return null;
+        return matchedActionCommand;
     }
 
     /* Action */
@@ -221,7 +226,7 @@ public class CommandParser {
         if (playerName.isEmpty()) {
             throw new UserException("Player name cannot be empty");
         }
-        if (matchAnyKeyword(playerName)) {
+        if (ValueUtils.matchAnyKeyword(playerName)) {
             String message = new StringBuilder()
                 .append("Cannot use keyword as player's name: ")
                 .append(playerName).toString();
@@ -239,13 +244,5 @@ public class CommandParser {
     public void addPlayerIfNotExisted(String playerName) {
         Player currPlayer = this.gameManager.getPlayer(playerName);
         if (currPlayer == null) this.gameManager.addPlayer(playerName);
-    }
-
-    private boolean matchAnyKeyword(String input) {
-        if (input == null) return false;
-        for (Keyword keyword : Keyword.values()) {
-            if (keyword.name().equalsIgnoreCase(input)) return true;
-        }
-        return false;
     }
 }

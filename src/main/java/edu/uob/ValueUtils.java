@@ -17,4 +17,12 @@ public class ValueUtils {
     public static boolean containIgnoreCase(String input, Keyword keyword) {
         return containIgnoreCase(input, keyword.name());
     }
+
+    public static boolean matchAnyKeyword(String input) {
+        if (input == null) return false;
+        for (Keyword keyword : Keyword.values()) {
+            if (keyword.name().equalsIgnoreCase(input)) return true;
+        }
+        return false;
+    }
 }

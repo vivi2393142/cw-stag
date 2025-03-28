@@ -5,9 +5,11 @@ import com.alexmerz.graphviz.objects.Edge;
 import com.alexmerz.graphviz.objects.Graph;
 import com.alexmerz.graphviz.objects.Node;
 import edu.uob.EntityType;
+import edu.uob.ValueUtils;
 import edu.uob.data.EntityData;
 import edu.uob.data.InteractableEntityData;
 import edu.uob.data.PathData;
+import edu.uob.exception.UserException;
 
 import java.io.File;
 import java.io.FileReader;
@@ -44,7 +46,7 @@ public class EntitiesParser {
         return wholeDocument.getSubgraphs();
     }
 
-    private void parse() {
+    private void parse() throws UserException {
         this.parseLocationAndEntity();
         this.parsePath();
     }
@@ -55,7 +57,7 @@ public class EntitiesParser {
     public InteractableEntityData[] getEntities() {return this.entities;}
 
     /* Utility */
-    private void parseLocationAndEntity() { // TODO: refactor, reduce length
+    private void parseLocationAndEntity() throws UserException { // TODO: refactor, reduce length
         // 1. initialize locations
         List<Graph> locations = this.entitySections.get(0).getSubgraphs();
         int locationSize = locations.size();
@@ -81,13 +83,17 @@ public class EntitiesParser {
         }
 
         // 3. if no requireLocation, add it
-        if (!Arrays.asList(loadedLocations).contains(this.requireLocation)) {
+        if (requireLocation != null &&
+            !Arrays.asList(loadedLocations).contains(this.requireLocation)) {
             loadedLocations = Arrays.copyOf(loadedLocations, loadedLocations.length + 1);
             loadedLocations[loadedLocations.length - 1] = this.requireLocation;
         }
 
         this.locations = loadedLocations;
         this.entities = loadedEntities.toArray(new InteractableEntityData[0]);
+
+        this.validateNoKeyword(this.locations);
+        this.validateNoKeyword(this.entities);
     }
 
     private void parseEntityGroup(Graph entityGroup, String locationName, String type,
@@ -126,5 +132,14 @@ public class EntitiesParser {
             loadedPaths[i] = new PathData(fromName, toName);
         }
         this.paths = loadedPaths;
+    }
+
+    /* Validate */
+    private void validateNoKeyword(EntityData[] entityDataList) throws UserException {
+        for (EntityData entity : entityDataList) {
+            if (ValueUtils.matchAnyKeyword(entity.getName())) {
+                throw new UserException("Cannot use keyword in entity name");
+            }
+        }
     }
 }
