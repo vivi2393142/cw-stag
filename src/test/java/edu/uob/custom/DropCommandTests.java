@@ -3,7 +3,7 @@ package edu.uob.custom;
 import org.junit.jupiter.api.Test;
 
 public class DropCommandTests extends BaseSTAGTests {
-    // TEST: drop with valid cmd
+    // drop with valid cmd
     @Test
     void testBasicDrop() {
         String[] variants = {"drop", "DROP", "dRoP"};
@@ -28,7 +28,7 @@ public class DropCommandTests extends BaseSTAGTests {
         }
     }
 
-    // TEST: drop with other players
+    // drop with other players
     @Test
     void testDropWithMultiPlayer() {
         // get axe
@@ -47,7 +47,7 @@ public class DropCommandTests extends BaseSTAGTests {
         this.assertCommandSucceed("RYAN: look", "aex", true);
     }
 
-    // TEST: drop with decorative words & unexpected order
+    // drop with decorative words & unexpected order
     @Test
     void testDropWithDecorativeWords() {
         this.assertCommandSucceed("simon: get potion");
@@ -55,13 +55,13 @@ public class DropCommandTests extends BaseSTAGTests {
         this.assertCommandSucceed("simon: inv", "potion", true);
     }
 
-    // TEST: drop without any artefact
+    // drop without any artefact
     @Test
     void testDropWithoutArtefact() {
         this.assertCommandFail("simon: drop");
     }
 
-    // TEST: drop with invalid artefact
+    // drop with invalid artefact
     @Test
     void testDropWithInvalidArtefact() {
         this.assertCommandSucceed("simon: get potion");
@@ -99,7 +99,7 @@ public class DropCommandTests extends BaseSTAGTests {
         this.assertCommandFail("simon: drop elf");
     }
 
-    // TEST: drop with multiple artefacts
+    // drop with multiple artefacts
     @Test
     void testDropMultipleArtefacts() {
         // before drop
@@ -122,5 +122,13 @@ public class DropCommandTests extends BaseSTAGTests {
         // drop artefact with non-entity word
         this.assertCommandSucceed("alex: drop axe abc", "axe");
         this.assertCommandSucceed("alex: inv", "axe", true);
+    }
+
+    @Test
+    void testDuplicatedValidSubject() {
+        this.assertCommandSucceed("simon: get axe");
+        this.assertCommandSucceed("simon: inv", "axe");
+        this.assertCommandSucceed("simon: drop axe axe");
+        this.assertCommandSucceed("simon: inv", "axe", true);
     }
 }

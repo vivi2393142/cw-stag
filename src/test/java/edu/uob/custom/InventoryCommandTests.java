@@ -2,11 +2,8 @@ package edu.uob.custom;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 public class InventoryCommandTests extends BaseSTAGTests {
-    // TEST: call inventory with valid & invalid cmd
+    // call inventory with valid & invalid cmd
     @Test
     void testBasicInventory() {
         String[] variants = {"inventory", "InvEntOry", "inv", "InV"};
@@ -22,7 +19,7 @@ public class InventoryCommandTests extends BaseSTAGTests {
         }
     }
 
-    // TEST: inventory with other players
+    // inventory with other players
     @Test
     void testWithMultiPlayer() {
         // begging
@@ -38,7 +35,7 @@ public class InventoryCommandTests extends BaseSTAGTests {
         this.assertCommandSucceed("John : inv", "nothing");
     }
 
-    // TEST: call inventory with decorative words &  unexpected order
+    // call inventory with decorative words & unexpected order
     @Test
     void testWithDecorativeWords() {
         this.assertCommandSucceed("simon: please show inventory", "inventory");

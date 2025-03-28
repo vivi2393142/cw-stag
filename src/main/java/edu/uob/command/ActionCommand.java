@@ -91,14 +91,24 @@ public class ActionCommand extends Command {
         context.getPlayer().addHealth(action.getProducedHealth());
     }
 
-    private boolean checkPlayerDied(ActionContext context) throws UserException, SystemException {
+    private boolean checkPlayerDied(ActionContext context) {
         Player player = context.getPlayer();
         if (player.getHealth() != 0) return false;
 
-        for (String inv : player.getInventories()) {
-            DropCommand dropCommand = new DropCommand(this.gameManager, player.getName(), inv);
-            dropCommand.execute();
+        for (String inv : player.getInventories()) { // TODO: too nested?
+            Location currLocation = this.gameManager.getLocation(player.getLocation());
+            InteractableEntity entity = this.gameManager.getEntity(inv);
+            if (entity.getType() == EntityType.ARTEFACT) {
+                Artefact inventory = (Artefact) entity;
+                // 1. update artefact's location & belongPlayer
+                inventory.setLocation(player.getLocation());
+                // 2. add artefact to current location
+                currLocation.addInterEntity(inventory.getName());
+            }
         }
+        // 3. remove all artefacts from player's inventories
+        player.removeAllInventory();
+
         this.gameManager.movePlayer(
             player.getName(), this.gameManager.getStartLocation().getName()
         );
@@ -108,7 +118,7 @@ public class ActionCommand extends Command {
 
     private void removeInvIfApplicable(InteractableEntity entity, Player player) {
         if (entity.getType() != EntityType.ARTEFACT) return;
-        
+
         Artefact artefact = (Artefact) entity;
         if (Objects.equals(artefact.getBelongPlayer(), player.getName())) {
             artefact.setBelongPlayer(null);

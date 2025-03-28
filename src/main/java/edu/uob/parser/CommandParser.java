@@ -26,9 +26,6 @@ public class CommandParser {
         if (colonIdx == -1) throw new UserException("Command should be start with player name");
         String playerName = lowerCasedCmd.substring(0, colonIdx).trim();
         this.validatePlayer(playerName);
-
-        // TODO: handle add player duplicated error
-        // TODO: handle add player with keywords error
         // 1-2. if player is new, add it
         this.addPlayerIfNotExisted(playerName);
 
@@ -210,7 +207,8 @@ public class CommandParser {
         }
 
         // 2. entity in current location
-        return targetEntity.getLocation().equalsIgnoreCase(player.getLocation());
+        String locationName = targetEntity.getLocation();
+        return locationName != null && locationName.equalsIgnoreCase(player.getLocation());
     }
 
     private boolean isAvailableEntity(Location targetPath, Player player) {

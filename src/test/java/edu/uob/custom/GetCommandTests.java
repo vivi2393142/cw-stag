@@ -2,10 +2,8 @@ package edu.uob.custom;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 public class GetCommandTests extends BaseSTAGTests {
-    // TEST: get with valid cmd
+    // get with valid cmd
     @Test
     void testBasicGet() {
         this.assertCommandSucceed("simon: look", "axe");
@@ -20,7 +18,7 @@ public class GetCommandTests extends BaseSTAGTests {
         this.assertCommandFail("simon: get axe");
     }
 
-    // TEST: get with invalid cmd
+    // get with invalid cmd
     @Test
     void testInvalidCmdGet() {
         // invalid word
@@ -32,7 +30,7 @@ public class GetCommandTests extends BaseSTAGTests {
         this.assertCommandSucceed("simon: inv", "nothing");
     }
 
-    // TEST: get with other players
+    // get with other players
     @Test
     void testWithMultiPlayer() {
         this.assertCommandSucceed("simon: look", "axe");
@@ -50,20 +48,20 @@ public class GetCommandTests extends BaseSTAGTests {
         this.assertCommandSucceed("simon: look", "potion", true);
     }
 
-    // TEST: get with decorative words & unexpected ordering
+    // get with decorative words & unexpected ordering
     @Test
     void testWithDecorativeWords() {
         this.assertCommandSucceed("simon: please find potion and get it", "potion");
         this.assertCommandSucceed("simon: inv", "potion");
     }
 
-    // TEST: get without any artefact
+    // get without any artefact
     @Test
     void testWithoutArtefact() {
         this.assertCommandFail("simon: get");
     }
 
-    // TEST: get with invalid artefact
+    // get with invalid artefact
     @Test
     void testWithInvalidArtefact() {
         // get with non-exist artefact
@@ -94,7 +92,7 @@ public class GetCommandTests extends BaseSTAGTests {
         this.assertCommandFail("simon: get elf");
     }
 
-    // TEST: get with an artefact from other place
+    // get with an artefact from other place
     @Test
     void testArtefactFromOtherLocation() {
         // should not get key in other place
@@ -107,7 +105,7 @@ public class GetCommandTests extends BaseSTAGTests {
         this.assertCommandSucceed("simon: inv", "key");
     }
 
-    // TEST: get with multiple artefacts
+    // get with multiple artefacts
     @Test
     void testMultipleArtefacts() {
         // before get
@@ -125,7 +123,7 @@ public class GetCommandTests extends BaseSTAGTests {
         this.assertCommandSucceed("simon: inv", "axe");
     }
 
-    // TEST: get artefact which is in other location
+    // get artefact which is in other location
     @Test
     void testArtefactInOtherMap() {
         // before get
@@ -141,7 +139,7 @@ public class GetCommandTests extends BaseSTAGTests {
         this.assertCommandSucceed("simon: inv", "key");
     }
 
-    // TEST: get artefact which is in storeroom
+    // get artefact which is in storeroom
     @Test
     void testArtefactInStoreroom() {
         // cannot get artefact in storeroom
@@ -157,7 +155,7 @@ public class GetCommandTests extends BaseSTAGTests {
         this.assertCommandSucceed("simon: inv", "log");
     }
 
-    // TEST: get artefact which is in own inventory
+    // get artefact which is in own inventory
     @Test
     void testArtefactInOwnInventory() {
         this.assertCommandSucceed("simon: get potion", "potion");
@@ -167,5 +165,12 @@ public class GetCommandTests extends BaseSTAGTests {
 
         // should not get from other's inv
         this.assertCommandFail("joe: get potion");
+    }
+
+    @Test
+    void testDuplicatedValidSubject() {
+        this.assertCommandSucceed("simon: inv", "axe", true);
+        this.assertCommandSucceed("simon: get axe axe");
+        this.assertCommandSucceed("simon: inv", "axe");
     }
 }

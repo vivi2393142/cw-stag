@@ -4,16 +4,24 @@ import org.junit.jupiter.api.Test;
 
 public class OtherTests extends BaseSTAGTests {
     /* Player */
-    // TODO: TEST: player name same as entity
+    // name same as entity
+    @Test
+    void testPlayerNameSameAsEntity() {
+        this.assertCommandSucceed("axe: look", "cabin");
+        this.assertCommandSucceed("potion: look", "cabin");
+        this.assertCommandSucceed("trapdoor: look", "cabin");
+        this.assertCommandSucceed("forest: look", "cabin");
+        this.assertCommandSucceed("elf: look", "cabin");
+    }
 
-    // TEST: command should start with player name like "xxx: xxx"
+    // command should start with player name like "xxx: xxx"
     @Test
     void testCommandMustStartWithPlayerName() {
         this.assertCommandFail("look");
         this.assertCommandSucceed("simon: look");
     }
 
-    // TEST: Valid player names can consist of uppercase and lowercase letters, spaces,
+    // Valid player names can consist of uppercase and lowercase letters, spaces,
     // apostrophes and hyphens
     @Test
     void testValidPlayerNames() {
@@ -29,7 +37,7 @@ public class OtherTests extends BaseSTAGTests {
         this.assertCommandFail("Simon!: look");
     }
 
-    // TEST: player name cannot use any keywords
+    // player name cannot use any keywords
     @Test
     void testPlayerNameCannotUseKeywords() {
         String[] keywords = {"health", "inv", "inventory", "get", "drop", "goto", "look"};
@@ -45,18 +53,49 @@ public class OtherTests extends BaseSTAGTests {
         }
     }
 
-    // TODO: TEST: case-insensitive player
+    // case-insensitive player
     // 1. if create player in different case, should be the same one
     // 2. should get player with different case
+    @Test
+    void testPlayerNameCaseInsensitive() {
+        String cabinMessage = "in a log cabin";
+        String forestMessage = "in a dark forest";
+
+        this.assertCommandSucceed("eli sa: look", cabinMessage);
+        this.assertCommandSucceed("elisa: look", cabinMessage);
+        this.assertCommandSucceed("eLisA: look", cabinMessage);
+
+        this.assertCommandSucceed("adam: look", "elisa");
+        this.assertCommandSucceed("adam: look", "eli sa");
+
+        this.assertCommandSucceed("ELiSA: goto forest", forestMessage);
+
+        this.assertCommandSucceed("eli sa: look", cabinMessage);
+        this.assertCommandSucceed(" ELISA : look", forestMessage);
+    }
 
     /* Entity */
-    // TODO: TEST: built-in commands are reserved words and therefore cannot be used as names for
-    // any other elements of the command language
+    // built-in commands are reserved words and therefore cannot be used as names
+    @Test
+    void testNoKeywordInPlayerName() {
+        String cabinMessage = "in a log cabin";
+        String forestMessage = "in a dark forest";
 
-    // TODO: TEST: if no storeroom, add it in
+        this.assertCommandSucceed("eli sa: look", cabinMessage);
+        this.assertCommandSucceed("elisa: look", cabinMessage);
+        this.assertCommandSucceed("eLisA: look", cabinMessage);
+
+        this.assertCommandSucceed("adam: look", "elisa");
+        this.assertCommandSucceed("adam: look", "eli sa");
+
+        this.assertCommandSucceed("ELiSA: goto forest", forestMessage);
+
+        this.assertCommandSucceed("eli sa: look", cabinMessage);
+        this.assertCommandSucceed(" ELISA : look", forestMessage);
+    }
 
     /* Command Flexibility */
-    // TEST: All commands (including entity names, locations, built-in commands and action triggers)
+    // All commands (including entity names, locations, built-in commands and action triggers)
     // should be treated as case-insensitive
     @Test
     void testCaseInsensitiveCommands() {
@@ -64,11 +103,7 @@ public class OtherTests extends BaseSTAGTests {
         for (String cmd : commands) this.assertCommandSucceed(cmd);
     }
 
-    // TODO: TEST: it is not possible for the configuration files to contain two different things
-    //  with the same name, but different capitalisation (e.g. there cannot be a door and
-    //  a DOOR in the same game)
-
-    // TEST: [Decorated Commands] he basic command chop tree with axe might well be entered by
+    // [Decorated Commands] he basic command chop tree with axe might well be entered by
     // the user as please chop the tree using the axe
     // Each incoming command MUST contain a trigger phrase and at least one subject
     @Test
@@ -87,9 +122,7 @@ public class OtherTests extends BaseSTAGTests {
         }
     }
 
-    // TODO: test decorative command on built-in commands
-
-    // TEST: [Word Ordering] chop tree with axe and use axe to chop tree are equivalent
+    // [Word Ordering] chop tree with axe and use axe to chop tree are equivalent
     @Test
     void testWordOrdering() {
         String[] commands = {
@@ -106,7 +139,7 @@ public class OtherTests extends BaseSTAGTests {
         }
     }
 
-    // TEST: [Partial Commands] the command unlock trapdoor with key could alternatively be
+    // [Partial Commands] the command unlock trapdoor with key could alternatively be
     // entered as either unlock trapdoor or unlock with key
     @Test
     void testPartialCommands() {
@@ -124,7 +157,7 @@ public class OtherTests extends BaseSTAGTests {
         }
     }
 
-    // TEST: [Extraneous Entities] When searching for an action, you must match ALL of the
+    // [Extraneous Entities] When searching for an action, you must match ALL of the
     // subjects that are specified in the incoming command (e.g. repair door with hammer and
     // nails). Extraneous entities included within an incoming command (i.e. entities that are in
     // the incoming command, but not specified in the action file) should prevent a match from
@@ -143,7 +176,7 @@ public class OtherTests extends BaseSTAGTests {
             ACTION_SUCCESS_MSG.CUT.getValue());
     }
 
-    // TEST: prevent the user attempting to perform actions with inappropriate entities
+    // prevent the user attempting to perform actions with inappropriate entities
     // (e.g. open potion with hammer should not succeed)
     @Test
     void testInappropriateEntities() {
@@ -161,15 +194,10 @@ public class OtherTests extends BaseSTAGTests {
     }
 
     /* Unsure Tests */
-    // TEST: 2 built-in keywords in 1 command?
+    // TODO: 2 built-in keywords in 1 command?
 
-    // TEST: built-in action with decorative words?
-
-    // TEST: built-in action with unexpected order?
-
-    // TEST: have built-in keyword & custom action trigger in 1 command?
-
+    // TODO: have built-in keyword & custom action trigger in 1 command?
 
     /* Other */
-    // TEST: add two same subjects to every kind of commands
+    // TODO: add two same subjects to every kind of commands
 }

@@ -60,18 +60,18 @@ public class ActionsFileParserTests {
 
     @Test
     void testMakeActionsFileUtil() {
-        String testBasicFileName = "test-basic.xml";
+        String testBasicFileName = "custom-basic.xml";
         TestUtils.makeActionsFile(this.expectedBasicActions, testBasicFileName);
         this.parseAndAssertActions(testBasicFileName, this.expectedBasicActions);
         TestUtils.removeFile(testBasicFileName);
 
-        String testExtendedFileName = "test-extended.xml";
+        String testExtendedFileName = "custom-extended.xml";
         TestUtils.makeActionsFile(this.expectedExtendedActions, testExtendedFileName);
         this.parseAndAssertActions(testExtendedFileName, this.expectedExtendedActions);
         TestUtils.removeFile(testExtendedFileName);
     }
 
-    // TEST: should be all lowercase after parse
+    // should be all lowercase after parse
     @Test
     void testUpperCaseInput() {
         GameAction[] upperCasedActions = new GameAction[this.expectedExtendedActions.length];
@@ -89,7 +89,7 @@ public class ActionsFileParserTests {
             i++;
         }
 
-        String testExtendedFileName = "test-extended.xml";
+        String testExtendedFileName = "custom-extended.xml";
         TestUtils.makeActionsFile(upperCasedActions, testExtendedFileName);
         this.parseAndAssertActions(testExtendedFileName, this.expectedExtendedActions);
         TestUtils.removeFile(testExtendedFileName);
@@ -110,7 +110,7 @@ public class ActionsFileParserTests {
                 0, 0, Set.of("key"), Set.of("cellar"),
                 "you unlock the trapdoor and see steps leading down into a cellar"),
         };
-        String testExtendedFileName = "test-extended.xml";
+        String testExtendedFileName = "custom-extended.xml";
         File actionsFile = TestUtils.makeActionsFile(actions, testExtendedFileName);
         try {
             new ActionsParser(actionsFile);

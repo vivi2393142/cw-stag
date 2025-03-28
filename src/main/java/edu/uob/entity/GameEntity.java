@@ -29,7 +29,7 @@ public abstract class GameEntity {
     @Override
     public String toString() {
         StringBuilder result = new StringBuilder();
-        result.append("type: ").append(this.type);
+        result.append("type: ").append(this.type).append("\n");
         result.append("name: ").append(this.name).append("\n");
         result.append("description: ").append(this.description);
         return result.toString();

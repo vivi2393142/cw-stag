@@ -27,7 +27,6 @@ public class DropCommand extends Command {
         Player player = this.gameManager.getPlayer(this.player);
         Location currLocation = this.gameManager.getLocation(player.getLocation());
         Artefact inventory = this.getValidInventory(this.possibleInventories, player);
-
         // 1. remove artefact from player's inventories
         player.removeInventory(inventory.getName());
         // 2. update artefact's location & belongPlayer

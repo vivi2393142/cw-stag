@@ -47,13 +47,14 @@ public abstract class BaseSTAGTests {
             actFile = "basic-actions.xml";
         }
 
-        File entitiesFile = Paths.get(
-            new StringBuilder().append("config").append(File.separator).append(entFile).toString()
-        ).toAbsolutePath().toFile();
-        File actionsFile = Paths.get(
-            new StringBuilder().append("config").append(File.separator).append(actFile).toString()
-        ).toAbsolutePath().toFile();
+        this.resetServer(entFile, actFile);
+    }
 
+    public void resetServer(String entitiesFileName, String actionsFileName) {
+        File entitiesFile = Paths.get(
+            TestUtils.getFilePath(entitiesFileName)).toAbsolutePath().toFile();
+        File actionsFile = Paths.get(
+            TestUtils.getFilePath(actionsFileName)).toAbsolutePath().toFile();
         this.server = new GameServer(entitiesFile, actionsFile);
     }
 
@@ -89,7 +90,8 @@ public abstract class BaseSTAGTests {
             this.assertCommandSucceed(cmd, unexpectedContent);
         } else {
             String response = sendCommandToServer(cmd).toLowerCase();
-            assertFalse(response.contains(unexpectedContent) && !response.contains(FAIL_PREFIX),
+            assertFalse(response.contains(unexpectedContent)
+                        && !response.contains(FAIL_PREFIX),
                 this.getAssertMessage(cmd, "not contain", unexpectedContent));
         }
     }

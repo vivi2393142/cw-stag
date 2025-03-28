@@ -4,6 +4,8 @@ import edu.uob.data.EntityData;
 import edu.uob.EntityType;
 import edu.uob.entity.GameEntity;
 
+import java.util.Objects;
+
 public class InteractableEntity extends GameEntity {
     private String location;
 

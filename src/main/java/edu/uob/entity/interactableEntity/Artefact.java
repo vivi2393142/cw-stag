@@ -19,15 +19,13 @@ public class Artefact extends InteractableEntity {
     /* Update */
     public void setBelongPlayer(String playerName) {
         this.belongPlayer = playerName;
-        if (playerName == null) super.setLocation(null);
+        if (playerName != null) this.setLocation(null);
     }
 
     @Override
     public void setLocation(String locationName) {
-        if (locationName == null) return;
-
         super.setLocation(locationName);
-        this.setBelongPlayer(null);
+        if (locationName != null) this.belongPlayer = null;
     }
 
     /* Utility */

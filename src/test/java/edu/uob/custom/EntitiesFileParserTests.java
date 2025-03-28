@@ -131,7 +131,7 @@ public class EntitiesFileParserTests {
         TestUtils.removeFile(testExtendedFileName);
     }
 
-    // TEST: should be all lowercase after parse
+    // should be all lowercase after parse
     @Test
     void testUpperCaseInput() {
         EntityData[] upperCasedLocations = new EntityData[this.expectedExtendedLocations.length];
@@ -177,7 +177,7 @@ public class EntitiesFileParserTests {
 
     @Test
     void testNoKeywordInEntity() {
-        String testExtendedFileName = "test-fail-extended.dot";
+        String testExtendedFileName = "custom-fail-extended.dot";
 
         // keyword in location
         int locationCtn = this.expectedBasicLocations.length;
@@ -203,7 +203,7 @@ public class EntitiesFileParserTests {
         );
     }
 
-    // TEST: add storeroom if not in file
+    // add storeroom if not in file
     @Test
     void testAddStoreroom() {
         EntityData[] locationsWithoutStoreroom = {
@@ -211,7 +211,7 @@ public class EntitiesFileParserTests {
             new EntityData("forest", "a dark forest"),
             new EntityData("cellar", "a dusty cellar"),
         };
-        String fileName = "test-entities.dot";
+        String fileName = "custom-entities.dot";
         File entitiesFile = TestUtils.makeEntitiesFile(locationsWithoutStoreroom,
             this.expectedBasicPaths, this.expectedBasicEntities, fileName);
 

@@ -133,7 +133,7 @@ public class TestUtils {
         sb.append("}\n"); // close paths
         sb.append("}\n"); // close digraph
 
-        // Write to file
+        // write to file
         try {
             String filePath = getFilePath(fileName);
             File file = new File(filePath);

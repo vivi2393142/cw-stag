@@ -53,7 +53,6 @@ public class GameManager {
     }
 
     public void addPlayer(String playerName) {
-        // TODO: check no reserved keywords
         // 1. create new player
         Player newPlayer = new Player(playerName, this.startLocation.getName());
         // 2. add player to startLocation
@@ -88,11 +87,10 @@ public class GameManager {
         InteractableEntity entity = this.getEntity(entityName);
         Location currLocation = this.getLocation(entity.getLocation());
         Location newLocation = this.getLocation(newLocationName);
-
         // 1. update entity's location
         entity.setLocation(newLocation.getName());
         // 2. remove entity from the location
-        currLocation.removeInterEntity(entityName);
+        if (currLocation != null) currLocation.removeInterEntity(entityName);
         // 3. add entity to new location
         newLocation.addInterEntity(entityName);
     }
@@ -155,6 +153,7 @@ public class GameManager {
 
     private <T extends GameEntity> Optional<T> getEntityByName(String name, Class<T> entityClass) {
         GameEntity entity = this.getEntity(name);
+        if (entity == null) entity = this.getLocation(name);
         if (entityClass.isInstance(entity)) return Optional.of(entityClass.cast(entity));
         return Optional.empty();
     }

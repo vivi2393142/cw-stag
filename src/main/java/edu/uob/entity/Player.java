@@ -13,7 +13,6 @@ public class Player extends GameEntity {
     private int health;
     private String location;
 
-    // TODO: check if player need description
     public Player(String name, String locationName) {
         super(new EntityData(name, ""), EntityType.PLAYER);
 
@@ -36,7 +35,6 @@ public class Player extends GameEntity {
     }
 
     /* Update */
-
     public void addHealth(int addedHealth) {
         this.health = Math.min(MAX_HEALTH, this.health + addedHealth);
     }
@@ -55,22 +53,27 @@ public class Player extends GameEntity {
 
     /* Creation */
     public void addInventory(String inventoryName) {
-        this.inventories.add(inventoryName); // TODO: check existe?
+        this.inventories.add(inventoryName);
     }
 
     /* Deletion */
     public void removeInventory(String inventoryName) {
-        this.inventories.remove(inventoryName); // TODO: check existe?
+        this.inventories.remove(inventoryName);
     }
+
+    public void removeAllInventory() {
+        this.inventories.clear();
+    }
+
 
     /* Utility */
     @Override
     public String toString() {
-        StringBuilder result = new StringBuilder();
-        result.append(super.toString()).append("\n");
-        result.append("inventories: ").append(this.inventories.toString()).append("\n");
-        result.append("health: ").append(this.health).append("\n");
-        result.append("location: ").append(this.location);
-        return result.toString();
+        return new StringBuilder()
+            .append(super.toString()).append("\n")
+            .append("inventories: ").append(this.inventories.toString()).append("\n")
+            .append("health: ").append(this.health).append("\n")
+            .append("location: ").append(this.location)
+            .toString();
     }
 }
