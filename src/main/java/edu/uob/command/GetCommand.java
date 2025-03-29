@@ -32,7 +32,7 @@ public class GetCommand extends Command {
         // 3. remove artefact from current location
         currLocation.removeInterEntity(artefact.getName());
 
-        return getMessage(artefact);
+        return this.getMessage(artefact);
     }
 
     private String getMessage(Artefact artefact) {

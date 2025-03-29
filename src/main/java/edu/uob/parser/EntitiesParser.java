@@ -17,7 +17,7 @@ import java.util.*;
 
 public class EntitiesParser {
     List<Graph> entitySections;
-    EntityData requireLocation;
+    final EntityData requireLocation;
 
     EntityData[] locations;
     PathData[] paths;

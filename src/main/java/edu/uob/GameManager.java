@@ -36,7 +36,6 @@ public class GameManager {
     }
 
     public Player getPlayer(String playerName) {return this.players.get(playerName);}
-    public HashMap<String, Player> getPlayers() {return this.players;}
 
     public InteractableEntity getEntity(String entityName) {return this.entities.get(entityName);}
     public HashMap<String, InteractableEntity> getEntities() {return this.entities;}

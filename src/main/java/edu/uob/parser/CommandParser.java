@@ -13,7 +13,7 @@ import edu.uob.exception.UserException;
 import java.util.*;
 
 public class CommandParser {
-    GameManager gameManager;
+    final GameManager gameManager;
 
     public CommandParser(GameManager gameManager) {
         this.gameManager = gameManager;
