@@ -6,16 +6,16 @@ import edu.uob.data.EntityData;
 import java.util.HashSet;
 
 public class Location extends GameEntity {
-    private HashSet<String> interactableEntities;
-    private HashSet<String> players;
-    private HashSet<String> paths;
+    private final HashSet<String> interactableEntities;
+    private final HashSet<String> players;
+    private final HashSet<String> paths;
 
     public Location(EntityData data) {
         super(data, EntityType.LOCATION);
 
         this.interactableEntities = new HashSet<>();
         this.players = new HashSet<>();
-        this.paths = new HashSet<>(); // TODO: should load after creation
+        this.paths = new HashSet<>();
     }
 
     /* Getter */
@@ -30,42 +30,29 @@ public class Location extends GameEntity {
     }
 
     /* Creation */
-    // TODO: handle error
     public void addInterEntity(String entityName) {this.interactableEntities.add(entityName);}
 
-    public void addPlayer(String playerName) {
-        this.players.add(playerName); // TODO: handle error
-    }
+    public void addPlayer(String playerName) {this.players.add(playerName);}
 
-    public void addPath(String pathName) { // TODO: check to add by Location[] or String[]
-        this.paths.add(pathName); // TODO: handle error
-    }
-
-    public void addPaths(String[] paths) {
-        for (String pathName : paths) this.addPath(pathName);
-    }
+    public void addPath(String pathName) {this.paths.add(pathName);}
 
     /* Deletion */
-    // TODO: check exist or not?
-    // TODO: handle error
     public void removeInterEntity(String name) {this.interactableEntities.remove(name);}
 
-    // TODO: check exist or not?
-    // TODO: handle error
     public void removePlayer(String playerName) {this.players.remove(playerName);}
 
-    public void removePath(String pathName) { // TODO: check exist or not?
-        this.paths.remove(pathName); // TODO: handle error
+    public void removePath(String pathName) {
+        this.paths.remove(pathName);
     }
 
     /* Utility */
     @Override
     public String toString() {
-        StringBuilder result = new StringBuilder();
-        result.append(super.toString()).append("\n");
-        result.append("entities: ").append(this.interactableEntities.toString()).append("\n");
-        result.append("players: ").append(this.players.toString()).append("\n");
-        result.append("paths: ").append(this.paths.toString());
-        return result.toString();
+        return new StringBuilder(super.toString())
+            .append("\n")
+            .append("entities: ").append(this.interactableEntities.toString()).append("\n")
+            .append("players: ").append(this.players.toString()).append("\n")
+            .append("paths: ").append(this.paths.toString())
+            .toString();
     }
 }

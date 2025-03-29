@@ -1,8 +1,8 @@
 package edu.uob.data;
 
 public class PathData {
-    private String fromLocationName;
-    private String toLocationName;
+    private final String fromLocationName;
+    private final String toLocationName;
 
     public PathData(String fromLocationName, String toLocationName) {
         this.fromLocationName = fromLocationName;

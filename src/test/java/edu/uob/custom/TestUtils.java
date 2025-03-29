@@ -140,7 +140,8 @@ public class TestUtils {
             Files.write(Paths.get(filePath), sb.toString().getBytes());
             return file;
         } catch (Exception e) {
-            System.err.println("Failed to write entities file: " + e.getMessage());
+            System.err.println(
+                new StringBuilder("Failed to write entities file: ").append(e.getMessage()));
             return null;
         }
     }

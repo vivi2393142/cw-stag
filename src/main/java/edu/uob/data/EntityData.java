@@ -1,16 +1,16 @@
 package edu.uob.data;
 
 public class EntityData {
-    private String name;
-    private String description;
+    private final String entityName;
+    private final String description;
 
     public EntityData(String name, String description) {
-        this.name = name;
+        this.entityName = name;
         this.description = description;
     }
 
     public String getName() {
-        return this.name;
+        return this.entityName;
     }
 
     public String getDescription() {

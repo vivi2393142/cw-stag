@@ -3,16 +3,17 @@ package edu.uob.command;
 import edu.uob.EntityType;
 import edu.uob.GameAction;
 import edu.uob.GameManager;
+import edu.uob.ValueUtils;
 import edu.uob.entity.GameEntity;
 import edu.uob.entity.Location;
 import edu.uob.entity.Player;
 import edu.uob.entity.interactableEntity.Artefact;
 import edu.uob.entity.interactableEntity.InteractableEntity;
 import edu.uob.exception.SystemException;
-import edu.uob.exception.UserException;
 
 import java.util.*;
 
+// handle custom action command
 public class ActionCommand extends Command {
     private final GameAction action;
 
@@ -22,19 +23,21 @@ public class ActionCommand extends Command {
         this.action = action;
     }
 
-    @Override
-    protected String executeCommand() throws SystemException, UserException {
+    protected String executeCommand() {
         Player player = this.gameManager.getPlayer(this.player);
-        ActionContext context = new ActionContext(this.gameManager, player);
+        ActionContext context = new ActionContext(this.action, this.gameManager, player);
 
-        // 1. perform action steps
+        // perform action steps
         this.consumeEntities(context);
         this.produceEntities(context);
         this.consumeHealth(context);
         this.produceHealth(context);
         boolean isDied = this.checkPlayerDied(context);
 
-        // 2. build result
+        return this.getMessage(isDied);
+    }
+
+    protected String getMessage(boolean isDied) {
         StringBuilder result = new StringBuilder(this.action.getNarration());
         if (isDied) {
             result
@@ -44,19 +47,18 @@ public class ActionCommand extends Command {
         return result.toString();
     }
 
+    // handle consume in command
     private void consumeEntities(ActionContext context) {
         Location currLocation = context.getCurrentLocation();
         Set<GameEntity> consumedEntities = context.getConsumedEntities();
 
+        // loop through consumedEntities
         for (GameEntity entity : consumedEntities) {
             EntityType type = entity.getType();
-            if (type == EntityType.LOCATION) {
+            if (type == EntityType.LOCATION) { // if location, remove path
                 Location path = (Location) entity;
                 currLocation.removePath(path.getName());
-            } else if (type == EntityType.ARTEFACT
-                       || type == EntityType.FURNITURE
-                       || type == EntityType.CHARACTER
-            ) {
+            } else if (ValueUtils.isInteractableEntity(type)) { // if not, move to storeroom
                 InteractableEntity interEntity = (InteractableEntity) entity;
                 this.gameManager.moveInterEntity(interEntity.getName(), GameManager.STOREROOM_NAME);
                 this.removeInvIfApplicable(interEntity, context.getPlayer());
@@ -64,19 +66,18 @@ public class ActionCommand extends Command {
         }
     }
 
+    // handle produce in command
     private void produceEntities(ActionContext context) {
         Location currLocation = context.getCurrentLocation();
         Set<GameEntity> producedEntities = context.getProducedEntities();
 
+        // loop through producedEntities
         for (GameEntity entity : producedEntities) {
             EntityType type = entity.getType();
-            if (type == EntityType.LOCATION) {
+            if (type == EntityType.LOCATION) { // if location, add path to current location
                 Location location = (Location) entity;
                 currLocation.addPath(location.getName());
-            } else if (type == EntityType.ARTEFACT
-                       || type == EntityType.FURNITURE
-                       || type == EntityType.CHARACTER
-            ) {
+            } else if (ValueUtils.isInteractableEntity(type)) { // if not, get it from storeroom
                 InteractableEntity interEntity = (InteractableEntity) entity;
                 this.gameManager.moveInterEntity(interEntity.getName(), currLocation.getName());
             }
@@ -84,19 +85,33 @@ public class ActionCommand extends Command {
     }
 
     private void consumeHealth(ActionContext context) {
-        context.getPlayer().deductHealth(action.getConsumedHealth());
+        context.getPlayer().deductHealth(this.action.getConsumedHealth());
     }
 
     private void produceHealth(ActionContext context) {
-        context.getPlayer().addHealth(action.getProducedHealth());
+        context.getPlayer().addHealth(this.action.getProducedHealth());
     }
 
     private boolean checkPlayerDied(ActionContext context) {
+        // 1. get player and check health
         Player player = context.getPlayer();
         if (player.getHealth() != 0) return false;
 
-        for (String inv : player.getInventories()) { // TODO: too nested?
-            Location currLocation = this.gameManager.getLocation(player.getLocation());
+        // 2. if died, drop all inventories
+        this.dropPlayerInventories(player);
+
+        // 3. move player to start location
+        this.gameManager.movePlayer(
+            player.getName(), this.gameManager.getStartLocation().getName()
+        );
+        player.resetHealth();
+        return true;
+    }
+
+    // move all artefacts from player's inventory to current location
+    private void dropPlayerInventories(Player player) {
+        Location currLocation = this.gameManager.getLocation(player.getLocation());
+        for (String inv : player.getInventories()) {
             InteractableEntity entity = this.gameManager.getEntity(inv);
             if (entity.getType() == EntityType.ARTEFACT) {
                 Artefact inventory = (Artefact) entity;
@@ -108,12 +123,6 @@ public class ActionCommand extends Command {
         }
         // 3. remove all artefacts from player's inventories
         player.removeAllInventory();
-
-        this.gameManager.movePlayer(
-            player.getName(), this.gameManager.getStartLocation().getName()
-        );
-        player.resetHealth();
-        return true;
     }
 
     private void removeInvIfApplicable(InteractableEntity entity, Player player) {
@@ -124,51 +133,6 @@ public class ActionCommand extends Command {
             artefact.setBelongPlayer(null);
         }
         player.removeInventory(artefact.getName());
-    }
-
-    private class ActionContext {
-        private final GameManager gameManager;
-        private final Player player;
-        private final Location currLocation;
-
-        public ActionContext(GameManager gameManager, Player player) {
-            this.gameManager = gameManager;
-            this.player = player;
-            this.currLocation = gameManager.getLocation(player.getLocation());
-        }
-
-        public Player getPlayer() {return this.player;}
-        public Location getCurrentLocation() {return this.currLocation;}
-
-        public Set<GameEntity> getConsumedEntities() {
-            return this.gameManager.getEntSetInLocation(action.getConsumedEntities(),
-                this.currLocation, false, this.player);
-        }
-
-        public Set<GameEntity> getProducedEntities() {
-            Set<GameEntity> producedEntities = new HashSet<>();
-            for (String entityName : action.getProducedEntities()) {
-                GameEntity targetEnt = this.getProducedEntity(entityName);
-                if (targetEnt != null) producedEntities.add(targetEnt);
-            }
-            return producedEntities;
-        }
-
-        public GameEntity getProducedEntity(String producedEntity) {
-            // 1. is a location, get from gameManager
-            Location location = this.gameManager.getLocation(producedEntity);
-            if (location != null) return location;
-
-            // 2. is other entity, get from storeroom
-            InteractableEntity entity = this.gameManager.getEntity(producedEntity);
-            if (entity != null &&
-                entity.getLocation().equalsIgnoreCase(GameManager.STOREROOM_NAME)
-            ) {
-                return entity;
-            }
-
-            return null;
-        }
     }
 
     /* Utility */

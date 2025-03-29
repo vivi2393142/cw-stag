@@ -9,7 +9,7 @@ public class Player extends GameEntity {
     public static final int MAX_HEALTH = 3;
     public static final int MIN_HEALTH = 0;
 
-    private HashSet<String> inventories;
+    private final HashSet<String> inventories;
     private int health;
     private String location;
 
@@ -68,8 +68,8 @@ public class Player extends GameEntity {
     /* Utility */
     @Override
     public String toString() {
-        return new StringBuilder()
-            .append(super.toString()).append("\n")
+        return new StringBuilder(super.toString())
+            .append("\n")
             .append("inventories: ").append(this.inventories.toString()).append("\n")
             .append("health: ").append(this.health).append("\n")
             .append("location: ").append(this.location)

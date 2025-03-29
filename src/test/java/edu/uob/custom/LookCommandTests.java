@@ -141,11 +141,6 @@ public class LookCommandTests extends BaseSTAGTests {
         this.assertCommandSucceed("simon: look", "forest");
     }
 
-    // TODO: look in a location with no paths
-    @Test
-    void testNoPaths() {
-    }
-
     // look with invalid player name
     @Test
     void testInvalidPlayerName() {

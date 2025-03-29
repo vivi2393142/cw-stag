@@ -4,15 +4,13 @@ import edu.uob.data.EntityData;
 import edu.uob.EntityType;
 import edu.uob.entity.GameEntity;
 
-import java.util.Objects;
-
 public class InteractableEntity extends GameEntity {
     private String location;
 
     public InteractableEntity(EntityData data, String locationName, EntityType type) {
         super(data, type);
         if (type == EntityType.LOCATION || type == EntityType.PLAYER) {
-            throw new IllegalArgumentException("InteractableEntity should have type Artefact, Character or Furniture");
+            throw new IllegalArgumentException("InteractableEntity type is wrong");
         }
         this.location = locationName;
     }
@@ -30,9 +28,9 @@ public class InteractableEntity extends GameEntity {
     /* Utility */
     @Override
     public String toString() {
-        StringBuilder result = new StringBuilder();
-        result.append(super.toString()).append("\n");
-        result.append("location: ").append(this.location);
-        return result.toString();
+        return new StringBuilder(super.toString())
+            .append("\n")
+            .append("location: ").append(this.location)
+            .toString();
     }
 }

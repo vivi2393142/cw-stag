@@ -23,25 +23,25 @@ public class GameAction {
     }
 
     /* Getter */
-    public Set<String> getTriggers() {return triggers;}
-    public Set<String> getSubjects() {return subjects;}
-    public int getConsumedHealth() {return consumedHealth;}
-    public int getProducedHealth() {return producedHealth;}
-    public Set<String> getConsumedEntities() {return consumedEntities;}
-    public Set<String> getProducedEntities() {return producedEntities;}
-    public String getNarration() {return narration;}
+    public Set<String> getTriggers() {return this.triggers;}
+    public Set<String> getSubjects() {return this.subjects;}
+    public int getConsumedHealth() {return this.consumedHealth;}
+    public int getProducedHealth() {return this.producedHealth;}
+    public Set<String> getConsumedEntities() {return this.consumedEntities;}
+    public Set<String> getProducedEntities() {return this.producedEntities;}
+    public String getNarration() {return this.narration;}
 
     /* Utility */
     @Override
     public String toString() {
-        StringBuilder result = new StringBuilder();
-        result.append("triggers: ").append(this.triggers.toString()).append("\n");
-        result.append("subjects: ").append(this.subjects.toString()).append("\n");
-        result.append("consumedHealth: ").append(this.consumedHealth).append("\n");
-        result.append("producedHealth: ").append(this.producedHealth).append("\n");
-        result.append("consumed: ").append(this.consumedEntities.toString()).append("\n");
-        result.append("produced: ").append(this.producedEntities.toString()).append("\n");
-        result.append("narration: ").append(this.narration);
-        return result.toString();
+        return new StringBuilder()
+            .append("triggers: ").append(this.triggers.toString()).append("\n")
+            .append("subjects: ").append(this.subjects.toString()).append("\n")
+            .append("consumedHealth: ").append(this.consumedHealth).append("\n")
+            .append("producedHealth: ").append(this.producedHealth).append("\n")
+            .append("consumed: ").append(this.consumedEntities.toString()).append("\n")
+            .append("produced: ").append(this.producedEntities.toString()).append("\n")
+            .append("narration: ").append(this.narration)
+            .toString();
     }
 }

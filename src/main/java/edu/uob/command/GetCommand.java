@@ -1,16 +1,12 @@
 package edu.uob.command;
 
 import edu.uob.GameManager;
-import edu.uob.EntityType;
-import edu.uob.ValueUtils;
 import edu.uob.entity.Location;
 import edu.uob.entity.Player;
 import edu.uob.entity.interactableEntity.Artefact;
-import edu.uob.entity.interactableEntity.InteractableEntity;
 import edu.uob.exception.SystemException;
 import edu.uob.exception.UserException;
 
-import java.util.HashSet;
 import java.util.Set;
 
 public class GetCommand extends Command {
@@ -46,37 +42,17 @@ public class GetCommand extends Command {
             .toString();
     }
 
-    public Artefact getValidArtefact(String possibleArtefacts, HashSet<String> entInLocation)
+    // get only ony valid artefact in current location from input string
+    public Artefact getValidArtefact(String possibleArtefacts, Set<String> entInLocation)
         throws UserException {
-        // check artefact exist
-        Set<Artefact> validArtefacts = new HashSet<>();
-        for (String entName : entInLocation) {
-            String lowerCaseEntName = entName.toLowerCase();
-            if (ValueUtils.containIgnoreCase(possibleArtefacts, lowerCaseEntName)) {
-                Artefact targetEnt = this.getArtefact(lowerCaseEntName);
-                if (targetEnt != null) validArtefacts.add(targetEnt);
-            }
-        }
-
-        // check if only one valid artefact in list
-        int artefactCtn = validArtefacts.size();
-        if (artefactCtn == 0) throw new UserException("Cannot find any target artefact");
-        if (artefactCtn > 1) throw new UserException("Cannot get multiple artefacts at once");
-        return validArtefacts.stream().findFirst().get();
-    }
-
-    public Artefact getArtefact(String entName) {
-        InteractableEntity artefact = this.gameManager.getEntity(entName);
-        if (artefact == null) return null;
-        if (artefact.getType() != EntityType.ARTEFACT) return null;
-        return (Artefact) artefact;
+        return this.getOnlyOneValidEntity(entInLocation, possibleArtefacts, Artefact.class);
     }
 
     /* Utility */
     @Override
     public String toString() {
-        return new StringBuilder()
-            .append(super.toString()).append("\n")
+        return new StringBuilder(super.toString())
+            .append("\n")
             .append("artefacts: ")
             .append(this.possibleArtefacts)
             .toString();

@@ -4,34 +4,34 @@ import edu.uob.EntityType;
 import edu.uob.data.EntityData;
 
 public abstract class GameEntity {
-    private final String name;
+    private final String entityName;
     private final String description;
-    private final EntityType type;
+    private final EntityType entityType;
 
     public GameEntity(EntityData data, EntityType type) {
-        this.name = data.getName();
+        this.entityName = data.getName();
         this.description = data.getDescription();
-        this.type = type;
+        this.entityType = type;
     }
 
     /* Getter */
     public String getName() {
-        return this.name;
+        return this.entityName;
     }
     public String getDescription() {
         return this.description;
     }
     public EntityType getType() {
-        return this.type;
+        return this.entityType;
     }
 
     /* Utility */
     @Override
     public String toString() {
-        StringBuilder result = new StringBuilder();
-        result.append("type: ").append(this.type).append("\n");
-        result.append("name: ").append(this.name).append("\n");
-        result.append("description: ").append(this.description);
-        return result.toString();
+        return new StringBuilder()
+            .append("type: ").append(this.entityType).append("\n")
+            .append("name: ").append(this.entityName).append("\n")
+            .append("description: ").append(this.description)
+            .toString();
     }
 }

@@ -19,7 +19,7 @@ public class CommandParser {
         this.gameManager = gameManager;
     }
 
-    public Command parse(String cmdStr) throws UserException, SystemException {
+    public Command parseCmd(String cmdStr) throws UserException, SystemException {
         String lowerCasedCmd = cmdStr.toLowerCase();
         // 1-1. get player name
         int colonIdx = lowerCasedCmd.indexOf(":");
@@ -37,66 +37,57 @@ public class CommandParser {
         Set<Keyword> matchKeywords = this.getAllMatchKeywords(restCms);
 
         // 4. try every command
-        if (this.isMatchInvKeyword(matchKeywords)) return this.tryParseInv(restCms, player);
+        return this.tryParseAny(matchKeywords, restCms, player);
+    }
+
+    /* Parse Attempt */
+    private Command tryParseAny(Set<Keyword> matchKeywords, String restCms, String player)
+        throws SystemException, UserException {
+        if (this.matchesInvKeyword(matchKeywords)) return this.tryParseInv(player);
 
         int matchCtn = matchKeywords.size();
-        if (matchCtn > 1) {
+        if (matchCtn > 1) { // check no multiple keywords
             throw new UserException("Cannot match multiple command keywords, please check again");
-        } else if (matchCtn == 1) {
+        } else if (matchCtn == 1) { // try parse to built-in command
             if (matchKeywords.contains(Keyword.GET)) return this.tryParseGet(restCms, player);
             if (matchKeywords.contains(Keyword.DROP)) return this.tryParserDrop(restCms, player);
-            if (matchKeywords.contains(Keyword.LOOK)) return this.tryParserLook(restCms, player);
-            if (matchKeywords.contains(Keyword.HEALTH)) return this.tryParseHealth(restCms, player);
+            if (matchKeywords.contains(Keyword.LOOK)) return this.tryParserLook(player);
+            if (matchKeywords.contains(Keyword.HEALTH)) return this.tryParseHealth(player);
             if (matchKeywords.contains(Keyword.GOTO)) return this.tryParserGoto(restCms, player);
-        } else {
+        } else { // try parse to custom actions
             Command actionCommand = this.tryParseAction(restCms, player);
             if (actionCommand != null) return actionCommand;
         }
 
+        // fail if no command match
         throw new UserException("Cannot match any command, please check again");
     }
 
-    /* Parse Attempt */
-    private InventoryCommand tryParseInv(String restCommand, String player) throws SystemException {
-        if (!(ValueUtils.containIgnoreCase(restCommand, Keyword.INV) ||
-              ValueUtils.containIgnoreCase(restCommand, Keyword.INVENTORY))
-        ) {
-            return null;
-        }
-        if (ValueUtils.matchAnyKeyword(restCommand, Set.of(Keyword.INV, Keyword.INVENTORY)))
-            return null;
+    private InventoryCommand tryParseInv(String player) throws SystemException {
         return new InventoryCommand(this.gameManager, player);
     }
 
     private GetCommand tryParseGet(String restCommand, String player)
         throws SystemException {
-        if (!ValueUtils.containIgnoreCase(restCommand, Keyword.GET)) return null;
-        if (ValueUtils.matchAnyKeyword(restCommand, Set.of(Keyword.INV, Keyword.INVENTORY)))
-            return null;
         return new GetCommand(this.gameManager, player, restCommand);
     }
 
     private DropCommand tryParserDrop(String restCommand, String player)
         throws SystemException {
-        if (!ValueUtils.containIgnoreCase(restCommand, Keyword.DROP)) return null;
         return new DropCommand(this.gameManager, player, restCommand);
     }
 
-    private LookCommand tryParserLook(String restCommand, String player)
+    private LookCommand tryParserLook(String player)
         throws SystemException {
-        if (!ValueUtils.containIgnoreCase(restCommand, Keyword.LOOK)) return null;
         return new LookCommand(this.gameManager, player);
     }
 
-
     private GotoCommand tryParserGoto(String restCommand, String player) throws SystemException {
-        if (!ValueUtils.containIgnoreCase(restCommand, Keyword.GOTO)) return null;
         return new GotoCommand(this.gameManager, player, restCommand);
     }
 
-    private HealthCommand tryParseHealth(String restCommand, String player)
+    private HealthCommand tryParseHealth(String player)
         throws SystemException {
-        if (!ValueUtils.containIgnoreCase(restCommand, Keyword.HEALTH)) return null;
         return new HealthCommand(this.gameManager, player);
     }
 
@@ -104,9 +95,10 @@ public class CommandParser {
         throws UserException, SystemException {
         HashSet<GameAction> actions = this.gameManager.getActions();
 
-        ActionCommand matchedActionCommand = null; // TODO: too nested?
+        // can only match one action, if more than one will fail
+        ActionCommand matchedActionCommand = null;
         for (GameAction action : actions) {
-            if (this.matchAction(action, restCommand, player)) {
+            if (this.matchesAction(action, restCommand, player)) {
                 if (matchedActionCommand == null) {
                     matchedActionCommand = new ActionCommand(this.gameManager, player, action);
                 } else {
@@ -118,46 +110,45 @@ public class CommandParser {
     }
 
     /* Action */
-    private boolean matchAction(GameAction action, String restCommand, String playerName) {
+    private boolean matchesAction(GameAction action, String restCommand, String playerName) {
         Player player = this.gameManager.getPlayer(playerName);
         // 1. valid command: at least one trigger
         if (!this.hasMatchingTrigger(action, restCommand)) return false;
         // 2. valid command: subjects
-        if (!this.matchSubjectsInCommand(action, restCommand, player)) return false;
+        if (!this.matchesSubjectsInCommand(action, restCommand, player)) return false;
         // 3. check subjects available
         if (!this.isSubjectSetAvailable(action.getSubjects(), player)) return false;
         // 4. check produce available
-        return isProduceSetAvailable(action.getProducedEntities());
+        return this.isProduceSetAvailable(action.getProducedEntities());
     }
 
     private boolean hasMatchingTrigger(GameAction action, String cmd) {
         for (String trigger : action.getTriggers()) {
-            if (ValueUtils.containIgnoreCase(cmd, trigger)) return true;
+            if (ValueUtils.containsIgnoreCase(cmd, trigger)) return true;
         }
         return false;
     }
 
-    private boolean matchSubjectsInCommand(GameAction action, String cmd, Player player) {
+    private boolean matchesSubjectsInCommand(GameAction action, String cmd, Player player) {
         boolean hasSubject = false;
 
-        // 2-1. get all subjects in command
+        // 1. get all subjects in command
         HashMap<String, GameEntity> combinedEntities = new HashMap<>();
         combinedEntities.putAll(this.gameManager.getEntities());
         combinedEntities.putAll(this.gameManager.getLocations());
 
         for (GameEntity entity : combinedEntities.values()) {
             String target = entity.getName();
-            if (ValueUtils.containIgnoreCase(cmd, target)) {
-                // 2-2. all subjects list in command must match to action
+            if (ValueUtils.containsIgnoreCase(cmd, target)) {
+                // 2. all subjects list in command must match to action
                 if (!action.getSubjects().contains(target)) return false;
-                // 2-3. subject must be available
+                // 3. subject must be available
                 if (!this.isAvailableEntity(entity, player)) return false;
                 hasSubject = true;
             }
         }
 
-        // 2-4. at least one subject in command
-        return hasSubject;
+        return hasSubject; // 4. at least one subject in command
     }
 
     private boolean isSubjectSetAvailable(Set<String> subjects, Player player) {
@@ -199,9 +190,9 @@ public class CommandParser {
 
     private boolean isAvailableEntity(GameEntity entity, Player player) {
         EntityType type = entity.getType();
-        if (type == EntityType.LOCATION) return isAvailableEntity((Location) entity, player);
+        if (type == EntityType.LOCATION) return this.isAvailableEntity((Location) entity, player);
         else if (type == EntityType.PLAYER) return false;
-        else return isAvailableEntity((InteractableEntity) entity, player);
+        else return this.isAvailableEntity((InteractableEntity) entity, player);
     }
 
     private boolean isAvailableEntity(InteractableEntity targetEntity, Player player) {
@@ -232,15 +223,15 @@ public class CommandParser {
 
     /* Validation */
     private void validatePlayer(String playerName) throws UserException {
-        if (playerName.isEmpty()) {
-            throw new UserException("Player name cannot be empty");
-        }
-        if (ValueUtils.matchAnyKeyword(playerName)) {
-            String message = new StringBuilder()
-                .append("Cannot use keyword as player's name: ")
+        // 1. player name cannot be empty
+        if (playerName.isEmpty()) throw new UserException("Player name cannot be empty");
+        // 2. no keyword in player's name
+        if (ValueUtils.matchesAnyKeyword(playerName)) {
+            String message = new StringBuilder("Cannot use keyword as player's name: ")
                 .append(playerName).toString();
             throw new UserException(message);
         }
+        // 3. consist of uppercase and lowercase letters, spaces, apostrophes and hyphens
         if (!playerName.matches("^[a-zA-Z'\\-\\s]+$")) {
             String message = new StringBuilder()
                 .append("player names can only consist of uppercase & lowercase letters,")
@@ -258,19 +249,16 @@ public class CommandParser {
     private Set<Keyword> getAllMatchKeywords(String input) {
         Set<Keyword> matchKeywords = new HashSet<>();
         for (Keyword keyword : Keyword.values()) {
-            if (ValueUtils.containIgnoreCase(input, keyword)) {
-                matchKeywords.add(keyword);
-            }
+            if (ValueUtils.containsIgnoreCase(input, keyword)) matchKeywords.add(keyword);
         }
         return matchKeywords;
     }
 
-    private boolean isMatchInvKeyword(Set<Keyword> matchKeywords) {
+    // inventory has two keywords, check if match any of them
+    private boolean matchesInvKeyword(Set<Keyword> matchKeywords) {
         int size = matchKeywords.size();
         boolean hasInv = matchKeywords.contains(Keyword.INV);
         boolean hasInventory = matchKeywords.contains(Keyword.INVENTORY);
-
-        return ((size == 1 && (hasInv || hasInventory)) ||
-                (size == 2 && hasInv && hasInventory));
+        return ((size == 1 && (hasInv || hasInventory)) || (size == 2 && hasInv && hasInventory));
     }
 }

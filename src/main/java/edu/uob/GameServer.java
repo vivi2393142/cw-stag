@@ -33,13 +33,11 @@ public final class GameServer {
      * @param actionsFile  The game configuration file containing all game actions to use in your game
      */
     public GameServer(File entitiesFile, File actionsFile) {
-        // TODO: implement your server logic here
         try {
             this.gameManager = new GameManager();
-            GameLoader gameLoader = new GameLoader(gameManager);
-            gameLoader.load(entitiesFile, actionsFile);
+            GameLoader gameLoader = new GameLoader(this.gameManager);
+            gameLoader.loadGame(entitiesFile, actionsFile);
         } catch (Exception e) {
-            // TODO: handle init error
             System.err.println(e.getMessage());
         }
     }
@@ -53,18 +51,15 @@ public final class GameServer {
     public String handleCommand(String command) {
         try {
             CommandParser commandParser = new CommandParser(this.gameManager);
-            Command commandInstance = commandParser.parse(command);
+            Command commandInstance = commandParser.parseCmd(command);
             return commandInstance.execute();
         } catch (UserException e) {
-            return new StringBuilder()
-                .append("[Fail] ")
+            return new StringBuilder("[Fail] ")
                 .append(e.getMessage())
                 .toString();
         } catch (Exception e) {
             e.printStackTrace();
-
-            return new StringBuilder()
-                .append("[Internal Server Error] ")
+            return new StringBuilder("[Internal Server Error] ")
                 .append(e.getMessage())
                 .toString();
         }
@@ -100,8 +95,7 @@ public final class GameServer {
     private void blockingHandleConnection(ServerSocket serverSocket) throws IOException {
         try (Socket s = serverSocket.accept();
              BufferedReader reader = new BufferedReader(new InputStreamReader(s.getInputStream()));
-             BufferedWriter writer =
-                 new BufferedWriter(new OutputStreamWriter(s.getOutputStream()))) {
+             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(s.getOutputStream()))) {
             System.out.println("Connection established");
             String incomingCommand = reader.readLine();
             if (incomingCommand != null) {

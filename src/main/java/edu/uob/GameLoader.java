@@ -15,42 +15,45 @@ import edu.uob.parser.EntitiesParser;
 import java.io.File;
 
 public class GameLoader {
-    private GameManager gameManager;
+    private final GameManager gameManager;
 
     public GameLoader(GameManager gameManager) {
         this.gameManager = gameManager;
     }
 
-    public void load(File entitiesFile, File actionsFile) throws UserException {
+    // load from file then parse into gameManager
+    public void loadGame(File entitiesFile, File actionsFile) throws UserException {
         try {
+            // 1. initialize storeroom and parses
             EntityData requireRoom = new EntityData(GameManager.STOREROOM_NAME,
                 "Storage for any entities not placed in the game");
             EntitiesParser entityParser = new EntitiesParser(entitiesFile, requireRoom);
             ActionsParser actionsParser = new ActionsParser(actionsFile);
 
+            // 2. apply parsed data
             EntityData[] loadedLocations = entityParser.getLocations();
             PathData[] loadedPaths = entityParser.getPaths();
             InteractableEntityData[] loadedEntities = entityParser.getEntities();
             GameAction[] loadedActions = actionsParser.getActions();
 
-            this.load(loadedLocations, loadedPaths, loadedEntities, loadedActions);
+            // 3. oad from formated data
+            this.loadGame(loadedLocations, loadedPaths, loadedEntities, loadedActions);
         } catch (Exception e) {
             throw new UserException("Fail to load file, please check file format again.");
         }
     }
 
-
-    public void load(EntityData[] loadedLocations, PathData[] loadedPaths,
-                     InteractableEntityData[] loadedEntities, GameAction[] loadedActions) {
+    // load every part of data needed for gameManager
+    public void loadGame(EntityData[] loadedLocations, PathData[] loadedPaths,
+                         InteractableEntityData[] loadedEntities, GameAction[] loadedActions) {
         this.loadLocations(loadedLocations, loadedPaths);
         this.loadInterEntities(loadedEntities);
         this.loadActions(loadedActions);
     }
 
-
     /* Load Locations */
     public void loadLocations(EntityData[] loadedLocations, PathData[] loadedPaths) {
-        // load locations
+        // 1. load locations
         boolean isFirst = true;
         for (EntityData loadedLocation : loadedLocations) {
             Location newLocation = this.loadLocation(loadedLocation);
@@ -60,7 +63,7 @@ public class GameLoader {
             }
         }
 
-        // load path
+        // 2. load path
         for (PathData loadedPath : loadedPaths) this.loadPath(loadedPath);
     }
 
@@ -81,25 +84,27 @@ public class GameLoader {
     }
 
     public void loadInterEntity(InteractableEntityData data) {
-        // TODO: add comment
+        // 1. get entity info
         String entityName = data.getName();
         String targetLocationName = data.getLocationName();
         Location targetLocation = this.gameManager.getLocation(data.getLocationName());
-        InteractableEntity newEntity = switch (data.getType()) {
-            case CHARACTER -> new Character(data, targetLocationName);
-            case ARTEFACT -> new Artefact(data, targetLocationName);
-            case FURNITURE -> new Furniture(data, targetLocationName);
-            // TODO: handle error
-            default -> throw new IllegalArgumentException("Invalid entity type");
-        };
 
+        // 2. initialize entity instance
+        EntityType type = data.getType();
+        InteractableEntity newEntity = null;
+        if (type == EntityType.CHARACTER) newEntity = new Character(data, targetLocationName);
+        if (type == EntityType.ARTEFACT) newEntity = new Artefact(data, targetLocationName);
+        if (type == EntityType.FURNITURE) newEntity = new Furniture(data, targetLocationName);
+        if (type == null) throw new IllegalArgumentException("Invalid entity type");
+
+        // 3. load per entity to gameManager
         this.gameManager.addEntity(newEntity);
         targetLocation.addInterEntity(entityName);
     }
 
     /* Load Actions */
     public void loadActions(GameAction[] loadedActions) {
-        for (GameAction loadedAction : loadedActions) loadAction(loadedAction);
+        for (GameAction loadedAction : loadedActions) this.loadAction(loadedAction);
     }
 
     public void loadAction(GameAction loadedAction) {

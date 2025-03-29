@@ -6,7 +6,7 @@ import java.util.Set;
 public class ValueUtils {
     private ValueUtils() {}
 
-    public static boolean containIgnoreCase(String input, String target) {
+    public static boolean containsIgnoreCase(String input, String target) {
         if (input == null || target == null) return false;
         String lowerCaseInput = input.toLowerCase();
         String lowerCaseTarget = target.toLowerCase();
@@ -17,22 +17,27 @@ public class ValueUtils {
         );
     }
 
-    public static boolean containIgnoreCase(String input, Keyword keyword) {
-        return containIgnoreCase(input, keyword.name());
+    public static boolean containsIgnoreCase(String input, Keyword keyword) {
+        return containsIgnoreCase(input, keyword.name());
     }
 
-    public static boolean matchAnyKeyword(String input) {
-        return matchAnyKeyword(input, new HashSet<>());
+    public static boolean matchesAnyKeyword(String input) {
+        return matchesAnyKeyword(input, new HashSet<>());
     }
 
-    public static boolean matchAnyKeyword(String input, Set<Keyword> withoutKeywords) {
+    public static boolean matchesAnyKeyword(String input, Set<Keyword> withoutKeywords) {
         if (input == null) return false;
         for (Keyword keyword : Keyword.values()) {
-            if (!withoutKeywords.contains(keyword)
-                && keyword.name().equalsIgnoreCase(input)) {
+            if (!withoutKeywords.contains(keyword) && keyword.name().equalsIgnoreCase(input)) {
                 return true;
             }
         }
         return false;
+    }
+
+    public static boolean isInteractableEntity(EntityType type) {
+        return type == EntityType.ARTEFACT
+               || type == EntityType.FURNITURE
+               || type == EntityType.CHARACTER;
     }
 }

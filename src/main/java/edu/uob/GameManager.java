@@ -41,9 +41,7 @@ public class GameManager {
     public InteractableEntity getEntity(String entityName) {return this.entities.get(entityName);}
     public HashMap<String, InteractableEntity> getEntities() {return this.entities;}
 
-    public Location getStoreroom() {
-        return this.getLocation(STOREROOM_NAME);
-    }
+    public Location getStoreroom() {return this.getLocation(STOREROOM_NAME);}
 
     public Location getStartLocation() {return this.startLocation;}
 
@@ -102,13 +100,10 @@ public class GameManager {
 
         // 1. get interactable entities from location
         entities.addAll(this.getInterEntInLocation(names, location));
-
         // 2. get paths from locations
         entities.addAll(this.getPathsInLocation(names, location));
-
         // 3. get players from location
         if (includePlayer) entities.addAll(this.getPlayersInLocation(names, location));
-
         // 4. get from player's inventory
         if (includeInvOfPlayer != null) {
             entities.addAll(this.getTargetInventory(names, includeInvOfPlayer));
@@ -117,56 +112,46 @@ public class GameManager {
         return entities;
     }
 
-    public boolean isAllEntAvailable(Set<String> names, Location location,
-                                     boolean includePlayer, Player includeInvOfPlayer) {
-        Set<GameEntity> entities = this.getEntSetInLocation(names, location,
-            includePlayer, includeInvOfPlayer);
-        return entities.size() == names.size();
-    }
-
+    // get target interactable entities in current location
     public Set<GameEntity> getInterEntInLocation(Set<String> names, Location location) {
         HashSet<String> interEntities = location.getInterEntities();
         return new HashSet<>(this.getEntSetByNames(names, interEntities, InteractableEntity.class));
     }
 
+    // get target valid paths from current location
     public Set<GameEntity> getPathsInLocation(Set<String> names, Location location) {
         return new HashSet<>(this.getEntSetByNames(names, location.getPaths(), Location.class));
     }
 
+    // get target valid player set in current location
     public Set<GameEntity> getPlayersInLocation(Set<String> names, Location location) {
         return new HashSet<>(this.getEntSetByNames(names, location.getPlayers(), Player.class));
     }
 
+    // get target valid inventory set on current player
     public Set<GameEntity> getTargetInventory(Set<String> names, Player player) {
         return new HashSet<>(this.getEntSetByNames(names, player.getInventories(), Artefact.class));
     }
 
+    // get target type of entities by name set
     private <T extends GameEntity> Set<T> getEntSetByNames(Set<String> names,
                                                            Set<String> availableEntities,
                                                            Class<T> entityClass) {
         Set<T> result = new HashSet<>();
         for (String name : names) {
-            this.addValidEntity(result, name, availableEntities, entityClass);
+            if (availableEntities.contains(name)) {
+                T entity = this.getEntityByName(name, entityClass);
+                result.add(entity);
+            }
         }
         return result;
     }
 
-    private <T extends GameEntity> Optional<T> getEntityByName(String name, Class<T> entityClass) {
+    // get target type of entity by name
+    public <T extends GameEntity> T getEntityByName(String name, Class<T> entityClass) {
         GameEntity entity = this.getEntity(name);
         if (entity == null) entity = this.getLocation(name);
-        if (entityClass.isInstance(entity)) return Optional.of(entityClass.cast(entity));
-        return Optional.empty();
-    }
-
-    private <T extends GameEntity> void addValidEntity(Set<T> result, String name,
-                                                       Set<String> entities,
-                                                       Class<T> entityClass) {
-        if (!entities.contains(name)) return;
-        Optional<T> entityOpt = this.getEntityByName(name, entityClass);
-
-        if (entityOpt.isEmpty()) return;
-
-        T entity = entityOpt.get();
-        result.add(entity);
+        if (entityClass.isInstance(entity)) return entityClass.cast(entity);
+        return null;
     }
 }

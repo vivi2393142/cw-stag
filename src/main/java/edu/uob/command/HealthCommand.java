@@ -12,6 +12,6 @@ public class HealthCommand extends Command {
     @Override
     protected String executeCommand() {
         Player player = this.gameManager.getPlayer(this.player);
-        return Integer.toString(player.getHealth());
+        return Integer.toString(player.getHealth()); // turn health number to string
     }
 }

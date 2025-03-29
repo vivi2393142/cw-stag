@@ -3,14 +3,14 @@ package edu.uob.data;
 import edu.uob.EntityType;
 
 public class InteractableEntityData extends EntityData {
-    private String locationName;
-    private EntityType type;
+    private final String locationName;
+    private final EntityType entityType;
 
     public InteractableEntityData(String name, String description, String locationName,
                                   EntityType type) {
         super(name, description);
         this.locationName = locationName;
-        this.type = type;
+        this.entityType = type;
     }
 
     public String getLocationName() {
@@ -18,6 +18,6 @@ public class InteractableEntityData extends EntityData {
     }
 
     public EntityType getType() {
-        return this.type;
+        return this.entityType;
     }
 }

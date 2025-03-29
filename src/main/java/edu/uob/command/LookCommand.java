@@ -18,12 +18,13 @@ public class LookCommand extends Command {
         Player player = this.gameManager.getPlayer(this.player);
         Location currLocation = this.gameManager.getLocation(player.getLocation());
 
-        return getMessage(currLocation);
+        return this.getMessage(currLocation);
     }
 
     private String getMessage(Location currLocation) {
         StringBuilder result = new StringBuilder();
 
+        // add location, entities and paths to message
         this.appendLocationInfo(result, currLocation);
         this.appendEntities(result, currLocation);
         this.appendPaths(result, currLocation);

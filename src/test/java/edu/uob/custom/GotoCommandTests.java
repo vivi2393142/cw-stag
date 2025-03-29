@@ -28,8 +28,17 @@ public class GotoCommandTests extends BaseSTAGTests {
     void testInvalidGotoCommands() {
         this.assertCommandFail("simon: goto"); // no destination
         this.assertCommandFail("simon: gotcha forest"); // invalid command
-        this.assertCommandSucceed("simon: goto forest cabin"); // TODO: multiple destinations
-        // TODO: any other action with two match targets
+    }
+
+    // goto with multiple locations
+    @Test
+    @Tag("extended")
+    void testMultipleLocations() {
+        // two locations with only in path
+        this.assertCommandSucceed("simon: goto forest cabin");
+        // two locations with two in path
+        this.assertCommandSucceed("simon: look", "in a deep dark forest");
+        this.assertCommandFail("simon: goto cabin riverbank");
     }
 
     // goto with multiple players moving independently

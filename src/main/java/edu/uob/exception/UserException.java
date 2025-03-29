@@ -13,6 +13,6 @@ public class UserException extends Exception {
 
     @Override
     public String getMessage() {
-        return message;
+        return this.message;
     }
 }

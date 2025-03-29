@@ -14,10 +14,11 @@ import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
 
+// parse xml actions file
 public class ActionsParser {
-    NodeList actionNodes;
     GameAction[] actions;
 
+    // attribute keywords used in action file
     private enum Tag {
         TRIGGERS("triggers"), SUBJECTS("subjects"), CONSUMED("consumed"),
         PRODUCED("produced"), NARRATION("narration"), KEYPHRASE("keyphrase"),
@@ -28,10 +29,11 @@ public class ActionsParser {
     }
 
     public ActionsParser(File actionsFile) throws Exception {
-        this.actionNodes = this.getActionNodesFromFile(actionsFile);
-        this.parse();
+        NodeList actionNodes = this.getActionNodesFromFile(actionsFile); // get xml nodes
+        this.parseActions(actionNodes); // parse nodes to action
     }
 
+    // get nodes from xml file
     private NodeList getActionNodesFromFile(File actionsFile) throws Exception {
         DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
         Document document = builder.parse(actionsFile);
@@ -39,13 +41,14 @@ public class ActionsParser {
         return root.getChildNodes();
     }
 
-    private void parse() throws UserException {
+    private void parseActions(NodeList nodes) throws UserException {
         Set<GameAction> actions = new HashSet<>();
 
         // only the odd items are actually actions
-        for (int i = 1; i < actionNodes.getLength(); i += 2) {
-            Element action = (Element) this.actionNodes.item(i);
+        for (int i = 1; i < nodes.getLength(); i += 2) {
+            Element action = (Element) nodes.item(i);
 
+            // 1. get action attributes
             Set<String> triggers = this.getAttrFromAction(action, Tag.TRIGGERS, Tag.KEYPHRASE);
             Set<String> subjects = this.getAttrFromAction(action, Tag.SUBJECTS, Tag.ENTITY);
             String narration = action.getElementsByTagName(Tag.NARRATION.value)
@@ -57,11 +60,13 @@ public class ActionsParser {
             Set<String> produced = this.getAttrFromAction(action, Tag.PRODUCED, Tag.ENTITY);
             int producedHealth = this.retrieveHealth(produced); // retrieve health from produced
 
+            // 2. check no keyword in attributes
             this.validateNoKeyword(triggers);
             this.validateNoKeyword(subjects);
             this.validateNoKeyword(consumed);
             this.validateNoKeyword(produced);
 
+            // 3. turn into GameAction
             GameAction newAction = new GameAction(triggers, subjects,
                 consumedHealth, producedHealth, consumed, produced, narration);
             actions.add(newAction);
@@ -88,6 +93,7 @@ public class ActionsParser {
         return items;
     }
 
+    // get health attribute from 'entity' in action file
     private int retrieveHealth(Set<String> targetSet) {
         String keyword = Keyword.HEALTH.name().toLowerCase();
         if (targetSet.contains(keyword)) {
@@ -100,7 +106,7 @@ public class ActionsParser {
     /* Validate */
     private void validateNoKeyword(Set<String> inputList) throws UserException {
         for (String input : inputList) {
-            if (ValueUtils.matchAnyKeyword(input)) {
+            if (ValueUtils.matchesAnyKeyword(input)) {
                 throw new UserException("Cannot use keyword in action");
             }
         }

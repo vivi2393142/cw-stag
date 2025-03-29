@@ -17,24 +17,20 @@ public class InventoryCommand extends Command {
         Player player = this.gameManager.getPlayer(this.player);
         HashSet<String> inventories = player.getInventories();
 
-        return getMessage(inventories);
+        return this.getMessage(inventories);
     }
 
     private String getMessage(HashSet<String> inventories) {
         StringBuilder result = new StringBuilder().append("You have ");
 
-        if (inventories.isEmpty()) {
+        if (inventories.isEmpty()) { // if empty, return 'nothing'
             result.append("nothing");
         } else {
-            boolean isFirst = true;
+            boolean isFirst = true; // connect inventory name with ','
             for (String inv : inventories) {
-                if (!isFirst) {
-                    result.append(", ");
-                } else {
-                    isFirst = false;
-                }
-                String info = this.getInventoryInfo(inv);
-                result.append(info);
+                if (!isFirst) result.append(", ");
+                else isFirst = false;
+                result.append(this.getInventoryInfo(inv));
             }
         }
 
@@ -44,8 +40,7 @@ public class InventoryCommand extends Command {
 
     private String getInventoryInfo(String inventoryName) {
         InteractableEntity inventory = this.gameManager.getEntity(inventoryName);
-        return new StringBuilder()
-            .append(inventory.getName())
+        return new StringBuilder(inventory.getName())
             .append("(")
             .append(inventory.getDescription())
             .append(")").toString();

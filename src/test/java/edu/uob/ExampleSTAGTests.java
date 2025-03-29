@@ -66,8 +66,6 @@ class ExampleSTAGTests {
     }
 
     // Add more unit tests or integration tests here.
-    // TODO: test file parsers
-
     @Test
     void testGetDropAndInventory() {
         String response;
