@@ -1,5 +1,8 @@
 package edu.uob;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class ValueUtils {
     private ValueUtils() {}
 
@@ -19,9 +22,16 @@ public class ValueUtils {
     }
 
     public static boolean matchAnyKeyword(String input) {
+        return matchAnyKeyword(input, new HashSet<>());
+    }
+
+    public static boolean matchAnyKeyword(String input, Set<Keyword> withoutKeywords) {
         if (input == null) return false;
         for (Keyword keyword : Keyword.values()) {
-            if (keyword.name().equalsIgnoreCase(input)) return true;
+            if (!withoutKeywords.contains(keyword)
+                && keyword.name().equalsIgnoreCase(input)) {
+                return true;
+            }
         }
         return false;
     }

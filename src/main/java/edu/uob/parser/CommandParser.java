@@ -24,24 +24,33 @@ public class CommandParser {
         // 1-1. get player name
         int colonIdx = lowerCasedCmd.indexOf(":");
         if (colonIdx == -1) throw new UserException("Command should be start with player name");
-        String playerName = lowerCasedCmd.substring(0, colonIdx).trim();
-        this.validatePlayer(playerName);
+        String player = lowerCasedCmd.substring(0, colonIdx).trim();
+        this.validatePlayer(player);
         // 1-2. if player is new, add it
-        this.addPlayerIfNotExisted(playerName);
+        this.addPlayerIfNotExisted(player);
 
         // 2. get and trim reset command
-        String restCommand = lowerCasedCmd.substring(colonIdx + 1).toLowerCase();
-        if (restCommand.isEmpty()) throw new UserException("Command cannot be empty");
+        String restCms = lowerCasedCmd.substring(colonIdx + 1).toLowerCase();
+        if (restCms.isEmpty()) throw new UserException("Command cannot be empty");
 
-        // 3. try every command
-        Command[] attempts = {
-            tryParseInv(restCommand, playerName), tryParseGet(restCommand, playerName),
-            tryParserDrop(restCommand, playerName), tryParserLook(restCommand, playerName),
-            tryParseHealth(restCommand, playerName), tryParserGoto(restCommand, playerName),
-            tryParseAction(restCommand, playerName)
-        };
-        for (Command command : attempts) {
-            if (command != null) return command;
+        // 3. get all keywords
+        Set<Keyword> matchKeywords = this.getAllMatchKeywords(restCms);
+
+        // 4. try every command
+        if (this.isMatchInvKeyword(matchKeywords)) return this.tryParseInv(restCms, player);
+
+        int matchCtn = matchKeywords.size();
+        if (matchCtn > 1) {
+            throw new UserException("Cannot match multiple command keywords, please check again");
+        } else if (matchCtn == 1) {
+            if (matchKeywords.contains(Keyword.GET)) return this.tryParseGet(restCms, player);
+            if (matchKeywords.contains(Keyword.DROP)) return this.tryParserDrop(restCms, player);
+            if (matchKeywords.contains(Keyword.LOOK)) return this.tryParserLook(restCms, player);
+            if (matchKeywords.contains(Keyword.HEALTH)) return this.tryParseHealth(restCms, player);
+            if (matchKeywords.contains(Keyword.GOTO)) return this.tryParserGoto(restCms, player);
+        } else {
+            Command actionCommand = this.tryParseAction(restCms, player);
+            if (actionCommand != null) return actionCommand;
         }
 
         throw new UserException("Cannot match any command, please check again");
@@ -54,12 +63,16 @@ public class CommandParser {
         ) {
             return null;
         }
+        if (ValueUtils.matchAnyKeyword(restCommand, Set.of(Keyword.INV, Keyword.INVENTORY)))
+            return null;
         return new InventoryCommand(this.gameManager, player);
     }
 
     private GetCommand tryParseGet(String restCommand, String player)
         throws SystemException {
         if (!ValueUtils.containIgnoreCase(restCommand, Keyword.GET)) return null;
+        if (ValueUtils.matchAnyKeyword(restCommand, Set.of(Keyword.INV, Keyword.INVENTORY)))
+            return null;
         return new GetCommand(this.gameManager, player, restCommand);
     }
 
@@ -107,7 +120,6 @@ public class CommandParser {
     /* Action */
     private boolean matchAction(GameAction action, String restCommand, String playerName) {
         Player player = this.gameManager.getPlayer(playerName);
-
         // 1. valid command: at least one trigger
         if (!this.hasMatchingTrigger(action, restCommand)) return false;
         // 2. valid command: subjects
@@ -181,7 +193,6 @@ public class CommandParser {
         // 1. is any of location, or
         Location targetLocation = this.gameManager.getLocation(producedEntity);
         if (targetLocation != null) return true;
-
         // 2. is in storeroom
         return this.gameManager.getStoreroom().getInterEntities().contains(producedEntity);
     }
@@ -242,5 +253,24 @@ public class CommandParser {
     public void addPlayerIfNotExisted(String playerName) {
         Player currPlayer = this.gameManager.getPlayer(playerName);
         if (currPlayer == null) this.gameManager.addPlayer(playerName);
+    }
+
+    private Set<Keyword> getAllMatchKeywords(String input) {
+        Set<Keyword> matchKeywords = new HashSet<>();
+        for (Keyword keyword : Keyword.values()) {
+            if (ValueUtils.containIgnoreCase(input, keyword)) {
+                matchKeywords.add(keyword);
+            }
+        }
+        return matchKeywords;
+    }
+
+    private boolean isMatchInvKeyword(Set<Keyword> matchKeywords) {
+        int size = matchKeywords.size();
+        boolean hasInv = matchKeywords.contains(Keyword.INV);
+        boolean hasInventory = matchKeywords.contains(Keyword.INVENTORY);
+
+        return ((size == 1 && (hasInv || hasInventory)) ||
+                (size == 2 && hasInv && hasInventory));
     }
 }

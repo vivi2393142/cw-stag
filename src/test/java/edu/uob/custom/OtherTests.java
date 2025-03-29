@@ -193,11 +193,13 @@ public class OtherTests extends BaseSTAGTests {
             ACTION_SUCCESS_MSG.UNLOCK.getValue());
     }
 
-    /* Unsure Tests */
-    // TODO: 2 built-in keywords in 1 command?
-
-    // TODO: have built-in keyword & custom action trigger in 1 command?
-
-    /* Other */
-    // TODO: add two same subjects to every kind of commands
+    // 2 built-in keywords in 1 command should fail
+    @Test
+    void testTwoKeywordsInCommand() {
+        this.assertCommandFail("simon: get axe and look");
+        this.assertCommandFail("simon: look then goto forest");
+        this.assertCommandFail("simon: get axe then drop axe");
+        this.assertCommandFail("simon: check health and look");
+        this.assertCommandFail("simon: check health and see inv");
+    }
 }

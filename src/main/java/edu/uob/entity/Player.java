@@ -65,7 +65,6 @@ public class Player extends GameEntity {
         this.inventories.clear();
     }
 
-
     /* Utility */
     @Override
     public String toString() {

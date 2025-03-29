@@ -8,6 +8,7 @@ import edu.uob.entity.interactableEntity.Artefact;
 import edu.uob.entity.interactableEntity.Character;
 import edu.uob.entity.interactableEntity.Furniture;
 import edu.uob.entity.interactableEntity.InteractableEntity;
+import edu.uob.exception.UserException;
 import edu.uob.parser.ActionsParser;
 import edu.uob.parser.EntitiesParser;
 
@@ -20,7 +21,7 @@ public class GameLoader {
         this.gameManager = gameManager;
     }
 
-    public void load(File entitiesFile, File actionsFile) {
+    public void load(File entitiesFile, File actionsFile) throws UserException {
         try {
             EntityData requireRoom = new EntityData(GameManager.STOREROOM_NAME,
                 "Storage for any entities not placed in the game");
@@ -34,7 +35,7 @@ public class GameLoader {
 
             this.load(loadedLocations, loadedPaths, loadedEntities, loadedActions);
         } catch (Exception e) {
-            // TODO: handle error
+            throw new UserException("Fail to load file, please check file format again.");
         }
     }
 
