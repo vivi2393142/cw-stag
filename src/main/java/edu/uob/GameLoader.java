@@ -13,6 +13,7 @@ import edu.uob.parser.ActionsParser;
 import edu.uob.parser.EntitiesParser;
 
 import java.io.File;
+import java.util.Set;
 
 public class GameLoader {
     private final GameManager gameManager;
@@ -31,46 +32,49 @@ public class GameLoader {
             ActionsParser actionsParser = new ActionsParser(actionsFile);
 
             // 2. apply parsed data
-            EntityData[] loadedLocations = entityParser.getLocations();
-            PathData[] loadedPaths = entityParser.getPaths();
-            InteractableEntityData[] loadedEntities = entityParser.getEntities();
-            GameAction[] loadedActions = actionsParser.getActions();
+            EntityData startLocation = entityParser.getStartLocation();
+            Set<EntityData> loadedLocations = entityParser.getLocations();
+            Set<PathData> loadedPaths = entityParser.getPaths();
+            Set<InteractableEntityData> loadedEntities = entityParser.getEntities();
+            Set<GameAction> loadedActions = actionsParser.getActions();
 
             // 3. oad from formated data
-            this.loadGame(loadedLocations, loadedPaths, loadedEntities, loadedActions);
+            this.loadGame(startLocation, loadedLocations,
+                loadedPaths, loadedEntities, loadedActions);
         } catch (Exception e) {
             throw new UserException("Fail to load file, please check file format again.");
         }
     }
 
     // load every part of data needed for gameManager
-    public void loadGame(EntityData[] loadedLocations, PathData[] loadedPaths,
-                         InteractableEntityData[] loadedEntities, GameAction[] loadedActions) {
-        this.loadLocations(loadedLocations, loadedPaths);
+    public void loadGame(EntityData startLocationData,
+                         Set<EntityData> loadedLocations, Set<PathData> loadedPaths,
+                         Set<InteractableEntityData> loadedEntities,
+                         Set<GameAction> loadedActions) {
+        this.loadLocations(startLocationData, loadedLocations, loadedPaths);
         this.loadInterEntities(loadedEntities);
         this.loadActions(loadedActions);
     }
 
     /* Load Locations */
-    public void loadLocations(EntityData[] loadedLocations, PathData[] loadedPaths) {
+    public void loadLocations(EntityData startLocationData, Set<EntityData> loadedLocations,
+                              Set<PathData> loadedPaths) {
         // 1. load locations
-        boolean isFirst = true;
         for (EntityData loadedLocation : loadedLocations) {
-            Location newLocation = this.loadLocation(loadedLocation);
-            if (isFirst) {
-                this.gameManager.setStartLocation(newLocation);
-                isFirst = false;
-            }
+            this.loadLocation(loadedLocation);
         }
+
+        // 2. add start location
+        Location startLocation = this.gameManager.getLocation(startLocationData.getName());
+        this.gameManager.setStartLocation(startLocation);
 
         // 2. load path
         for (PathData loadedPath : loadedPaths) this.loadPath(loadedPath);
     }
 
-    public Location loadLocation(EntityData data) {
+    public void loadLocation(EntityData data) {
         Location newLocation = new Location(data);
         this.gameManager.addLocation(newLocation);
-        return newLocation;
     }
 
     public void loadPath(PathData data) {
@@ -79,7 +83,7 @@ public class GameLoader {
     }
 
     /* Load Entities */
-    public void loadInterEntities(InteractableEntityData[] loadedEntities) {
+    public void loadInterEntities(Set<InteractableEntityData> loadedEntities) {
         for (InteractableEntityData entity : loadedEntities) this.loadInterEntity(entity);
     }
 
@@ -103,7 +107,7 @@ public class GameLoader {
     }
 
     /* Load Actions */
-    public void loadActions(GameAction[] loadedActions) {
+    public void loadActions(Set<GameAction> loadedActions) {
         for (GameAction loadedAction : loadedActions) this.loadAction(loadedAction);
     }
 

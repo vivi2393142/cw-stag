@@ -9,24 +9,27 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.nio.file.Paths;
-import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class EntitiesFileParserTests {
     // expected basic data
-    EntityData[] expectedBasicLocations = {
-        new EntityData("cabin", "a log cabin in the woods"),
+    final EntityData basicStartLocation =
+        new EntityData("cabin", "a log cabin in the woods");
+    Set<EntityData> expectedBasicLocations = Set.of(
+        this.basicStartLocation,
         new EntityData("forest", "a dark forest"),
         new EntityData("cellar", "a dusty cellar"),
         new EntityData("storeroom", "storage for any entities not placed in the game")
-    };
-    PathData[] expectedBasicPaths = {
+    );
+    Set<PathData> expectedBasicPaths = Set.of(
         new PathData("cabin", "forest"),
         new PathData("forest", "cabin"),
         new PathData("cellar", "cabin")
-    };
-    InteractableEntityData[] expectedBasicEntities = {
+    );
+    Set<InteractableEntityData> expectedBasicEntities = Set.of(
         new InteractableEntityData(
             "axe", "a razor sharp axe", "cabin", EntityType.ARTEFACT),
         new InteractableEntityData(
@@ -41,29 +44,31 @@ public class EntitiesFileParserTests {
             "elf", "angry elf", "cellar", EntityType.CHARACTER),
         new InteractableEntityData(
             "log", "a heavy wooden log", "storeroom", EntityType.ARTEFACT)
-    };
+    );
 
     // expected extended data
-    EntityData[] expectedExtendedLocations = {
-        new EntityData("cabin", "a log cabin in the woods"),
+    final EntityData extendedStartLocation =
+        new EntityData("cabin", "a log cabin in the woods");
+    Set<EntityData> expectedExtendedLocations = Set.of(
+        this.extendedStartLocation,
         new EntityData("forest", "a deep dark forest"),
         new EntityData("cellar", "a dusty cellar"),
         new EntityData("riverbank", "a grassy riverbank"),
         new EntityData("clearing", "a clearing in the woods"),
         new EntityData("storeroom",
             "storage for any entities not placed in the game")
-    };
+    );
 
-    PathData[] expectedExtendedPaths = {
+    Set<PathData> expectedExtendedPaths = Set.of(
         new PathData("cabin", "forest"),
         new PathData("forest", "cabin"),
         new PathData("cellar", "cabin"),
         new PathData("forest", "riverbank"),
         new PathData("riverbank", "forest"),
         new PathData("clearing", "riverbank")
-    };
+    );
 
-    InteractableEntityData[] expectedExtendedEntities = {
+    Set<InteractableEntityData> expectedExtendedEntities = Set.of(
         new InteractableEntityData("potion", "a bottle of magic potion",
             "cabin", EntityType.ARTEFACT),
         new InteractableEntityData("axe", "a razor sharp axe",
@@ -96,7 +101,7 @@ public class EntitiesFileParserTests {
             "storeroom", EntityType.ARTEFACT),
         new InteractableEntityData("hole", "a deep hole in the ground",
             "storeroom", EntityType.FURNITURE)
-    };
+    );
 
     @Test
     void testParseBasicFile() {
@@ -114,7 +119,7 @@ public class EntitiesFileParserTests {
     @Test
     void testMakeEntitiesFileUtil() {
         String testBasicFileName = "test-basic.dot";
-        TestUtils.makeEntitiesFile(
+        TestUtils.makeEntitiesFile(this.basicStartLocation,
             this.expectedBasicLocations, this.expectedBasicPaths, this.expectedBasicEntities,
             testBasicFileName);
         this.parseAndAssertEntities(testBasicFileName,
@@ -122,7 +127,7 @@ public class EntitiesFileParserTests {
         TestUtils.removeFile(testBasicFileName);
 
         String testExtendedFileName = "test-extend.dot";
-        TestUtils.makeEntitiesFile(
+        TestUtils.makeEntitiesFile(this.extendedStartLocation,
             this.expectedExtendedLocations, this.expectedExtendedPaths,
             this.expectedExtendedEntities, testExtendedFileName);
         this.parseAndAssertEntities(
@@ -134,42 +139,40 @@ public class EntitiesFileParserTests {
     // should be all lowercase after parse
     @Test
     void testUpperCaseInput() {
-        EntityData[] upperCasedLocations = new EntityData[this.expectedExtendedLocations.length];
-        int i = 0;
+        EntityData upperCasedStartLocation = null;
+        Set<EntityData> upperCasedLocations = new HashSet<>();
         for (EntityData location : this.expectedExtendedLocations) {
-            upperCasedLocations[i] = new EntityData(
+            EntityData newLocation = new EntityData(
                 location.getName().toUpperCase(),
                 location.getDescription().toUpperCase()
             );
-            i++;
+            if (newLocation.getName().equalsIgnoreCase(this.extendedStartLocation.getName())) {
+                upperCasedStartLocation = newLocation;
+            }
+            upperCasedLocations.add(newLocation);
         }
 
-        PathData[] upperCasedPaths = new PathData[this.expectedExtendedPaths.length];
-        int j = 0;
+        Set<PathData> upperCasedPaths = new HashSet<>();
         for (PathData path : this.expectedExtendedPaths) {
-            upperCasedPaths[j] = new PathData(
+            upperCasedPaths.add(new PathData(
                 path.getFromLocationName().toUpperCase(),
                 path.getToLocationName().toUpperCase()
-            );
-            j++;
+            ));
         }
 
-        InteractableEntityData[] upperCasedEntities =
-            new InteractableEntityData[this.expectedExtendedEntities.length];
-        int k = 0;
+        Set<InteractableEntityData> upperCasedEntities = new HashSet<>();
         for (InteractableEntityData entity : this.expectedExtendedEntities) {
-            upperCasedEntities[k] = new InteractableEntityData(
+            upperCasedEntities.add(new InteractableEntityData(
                 entity.getName().toUpperCase(),
                 entity.getDescription().toUpperCase(),
                 entity.getLocationName().toUpperCase(),
                 entity.getType()
-            );
-            k++;
+            ));
         }
 
         String testExtendedFileName = "test-extended.dot";
-        TestUtils.makeEntitiesFile(upperCasedLocations, upperCasedPaths, upperCasedEntities,
-            testExtendedFileName);
+        TestUtils.makeEntitiesFile(upperCasedStartLocation, upperCasedLocations,
+            upperCasedPaths, upperCasedEntities, testExtendedFileName);
         this.parseAndAssertEntities(testExtendedFileName, this.expectedExtendedLocations,
             this.expectedExtendedPaths, this.expectedExtendedEntities);
         TestUtils.removeFile(testExtendedFileName);
@@ -177,28 +180,31 @@ public class EntitiesFileParserTests {
 
     @Test
     void testNoKeywordInEntity() {
-        String testExtendedFileName = "custom-fail-extended.dot";
+        String testExtendedFileName = "custom-extended.dot";
 
         // keyword in location
-        int locationCtn = this.expectedBasicLocations.length;
-        EntityData[] locations = new EntityData[locationCtn + 1];
-        for (int i = 0; i < locationCtn; i++) locations[i] = this.expectedBasicLocations[i];
-        locations[locationCtn] = new EntityData("get", "invalid location");
-
-        this.assertFailParse(testExtendedFileName,
-            locations, this.expectedBasicPaths, this.expectedBasicEntities,
+        EntityData startLocationWithKeyword =
+            new EntityData("get", "invalid location");
+        Set<EntityData> locationsWithKeyword = Set.of(startLocationWithKeyword);
+        Set<PathData> paths = new HashSet<>();
+        Set<InteractableEntityData> entities = Set.of(
+            new InteractableEntityData("key", "key detail",
+                "get", EntityType.ARTEFACT)
+        );
+        this.assertFailParse(testExtendedFileName, startLocationWithKeyword,
+            locationsWithKeyword, paths, entities,
             "Parsing file with keyword in location throw exception"
         );
 
         // keyword in entity
-        int entCtn = this.expectedBasicEntities.length;
-        InteractableEntityData[] entities = new InteractableEntityData[entCtn + 1];
-        for (int j = 0; j < entCtn; j++) entities[j] = this.expectedBasicEntities[j];
-        entities[entCtn] = new InteractableEntityData("get", "invalid",
-            "cabin", EntityType.ARTEFACT);
-
-        this.assertFailParse(testExtendedFileName,
-            this.expectedBasicLocations, this.expectedBasicPaths, entities,
+        EntityData startLocation = new EntityData("cabin", "valid location");
+        Set<EntityData> locations = Set.of(startLocation);
+        Set<InteractableEntityData> entitiesWithKeyword = Set.of(
+            new InteractableEntityData("look", "invalid artefact",
+                "cabin", EntityType.ARTEFACT)
+        );
+        this.assertFailParse(testExtendedFileName, startLocation,
+            locations, paths, entitiesWithKeyword,
             "Parsing file with keyword in entity name throw exception"
         );
     }
@@ -206,13 +212,14 @@ public class EntitiesFileParserTests {
     // add storeroom if not in file
     @Test
     void testAddStoreroom() {
-        EntityData[] locationsWithoutStoreroom = {
-            new EntityData("cabin", "a log cabin in the woods"),
+        EntityData startLocation = new EntityData("cabin", "a log cabin in the woods");
+        Set<EntityData> locationsWithoutStoreroom = Set.of(
+            startLocation,
             new EntityData("forest", "a dark forest"),
-            new EntityData("cellar", "a dusty cellar"),
-        };
+            new EntityData("cellar", "a dusty cellar")
+        );
         String fileName = "custom-entities.dot";
-        File entitiesFile = TestUtils.makeEntitiesFile(locationsWithoutStoreroom,
+        File entitiesFile = TestUtils.makeEntitiesFile(startLocation, locationsWithoutStoreroom,
             this.expectedBasicPaths, this.expectedBasicEntities, fileName);
 
         try {
@@ -231,7 +238,7 @@ public class EntitiesFileParserTests {
         }
     }
 
-    boolean hasStoreroom(EntityData[] locations) {
+    boolean hasStoreroom(Set<EntityData> locations) {
         for (EntityData data : locations) {
             if (data.getName().equalsIgnoreCase("storeroom")) return true;
         }
@@ -251,9 +258,11 @@ public class EntitiesFileParserTests {
     }
 
     /* Assert */
-    void assertFailParse(String fileName, EntityData[] locations, PathData[] paths,
-                         InteractableEntityData[] entities, String errorMessage) {
-        File entitiesFile = TestUtils.makeEntitiesFile(locations, paths, entities, fileName);
+    void assertFailParse(String fileName, EntityData startLocation, Set<EntityData> locations,
+                         Set<PathData> paths, Set<InteractableEntityData> entities,
+                         String errorMessage) {
+        File entitiesFile = TestUtils.makeEntitiesFile(startLocation, locations, paths, entities,
+            fileName);
         try {
             new EntitiesParser(entitiesFile, null);
             fail(errorMessage);
@@ -264,110 +273,88 @@ public class EntitiesFileParserTests {
     }
 
     // parse and assert entities from a file against expected data
-    private void parseAndAssertEntities(String fileName, EntityData[] expectedLocations,
-                                        PathData[] expectedPaths, InteractableEntityData[] expectedEntities) {
+    private void parseAndAssertEntities(String fileName, Set<EntityData> expectedLocations,
+                                        Set<PathData> expectedPaths,
+                                        Set<InteractableEntityData> expectedEntities) {
         File entitiesFile = Paths.get(TestUtils.getFilePath(fileName)).toAbsolutePath().toFile();
-        EntityData[] loadedLocations;
-        PathData[] loadedPaths;
-        InteractableEntityData[] loadedEntities;
         try {
             EntitiesParser entitiesParser = new EntitiesParser(entitiesFile, null);
-            loadedLocations = entitiesParser.getLocations();
-            loadedPaths = entitiesParser.getPaths();
-            loadedEntities = entitiesParser.getEntities();
+            Set<EntityData> loadedLocations = entitiesParser.getLocations();
+            Set<PathData> loadedPaths = entitiesParser.getPaths();
+            Set<InteractableEntityData> loadedEntities = entitiesParser.getEntities();
+            assertTrue(this.checkIsEntityDataSame(loadedLocations, expectedLocations),
+                "Loaded locations should exactly match expected locations");
+            assertTrue(this.checkIsPathDataSame(loadedPaths, expectedPaths),
+                "Loaded paths should exactly match expected paths");
+            assertTrue(this.checkIsEntitiesSame(loadedEntities, expectedEntities),
+                "Loaded entities should exactly match expected entities");
         } catch (Exception e) {
             fail("Should not throw exception when parsing valid file");
             return;
         }
-
-        assertTrue(this.checkIsEntityDataSame(loadedLocations, expectedLocations),
-            "Loaded locations should exactly match expected locations");
-        assertTrue(this.checkIsPathDataSame(loadedPaths, expectedPaths),
-            "Loaded paths should exactly match expected paths");
-        assertTrue(this.checkIsInteractableEntityDataSame(loadedEntities, expectedEntities),
-            "Loaded entities should exactly match expected entities");
     }
 
     /* Utility */
     // check if two EntityData arrays are identical regardless of order
-    private boolean checkIsEntityDataSame(EntityData[] entities1, EntityData[] entities2) {
-        if (entities1.length != entities2.length) return false;
-
-        EntityData[] tempEntities2 = Arrays.copyOf(entities2, entities2.length);
-        boolean[] matched = new boolean[entities2.length];
-
-        for (EntityData entity1 : entities1) {
-            boolean found = false;
-            for (int j = 0; j < tempEntities2.length; j++) {
-                if (!matched[j] && checkIsEntityDataEqual(entity1, tempEntities2[j])) {
-                    matched[j] = true;
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) return false;
+    private boolean checkIsEntityDataSame(Set<EntityData> dataSet1, Set<EntityData> dataSet2) {
+        if (dataSet1.size() != dataSet2.size()) return false;
+        for (EntityData data1 : dataSet1) {
+            if (!this.checkContainData(data1, dataSet2)) return false;
         }
         return true;
     }
 
-    private boolean checkIsEntityDataEqual(EntityData entity1, EntityData entity2) {
-        return entity1.getName().equals(entity2.getName()) &&
-               entity1.getDescription().equals(entity2.getDescription());
+    private boolean checkContainData(EntityData targetData, Set<EntityData> dataSet) {
+        for (EntityData data : dataSet) {
+            boolean isSame =
+                data.getName().equals(targetData.getName()) &&
+                data.getDescription().equals(targetData.getDescription());
+            if (isSame) return true;
+        }
+        return false;
     }
 
     // check if two PathData arrays are identical regardless of order
-    private boolean checkIsPathDataSame(PathData[] paths1, PathData[] paths2) {
-        if (paths1.length != paths2.length) return false;
-
-        PathData[] tempPaths2 = Arrays.copyOf(paths2, paths2.length);
-        boolean[] matched = new boolean[paths2.length];
-
+    private boolean checkIsPathDataSame(Set<PathData> paths1, Set<PathData> paths2) {
+        if (paths1.size() != paths2.size()) return false;
         for (PathData path1 : paths1) {
-            boolean found = false;
-            for (int j = 0; j < tempPaths2.length; j++) {
-                if (!matched[j] && checkIsPathDataEqual(path1, tempPaths2[j])) {
-                    matched[j] = true;
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) return false;
+            if (!this.checkContainPath(path1, paths2)) return false;
         }
         return true;
     }
 
-    private boolean checkIsPathDataEqual(PathData path1, PathData path2) {
-        return path1.getFromLocationName().equals(path2.getFromLocationName()) &&
-               path1.getToLocationName().equals(path2.getToLocationName());
+    private boolean checkContainPath(PathData targetPath, Set<PathData> pathSet) {
+        for (PathData path : pathSet) {
+            boolean isSame =
+                path.getFromLocationName().equalsIgnoreCase(targetPath.getFromLocationName()) &&
+                path.getToLocationName().equalsIgnoreCase(targetPath.getToLocationName());
+            if (isSame) return true;
+        }
+        return false;
     }
 
     // check if two InteractableEntityData arrays are identical regardless of order
-    private boolean checkIsInteractableEntityDataSame(InteractableEntityData[] entities1,
-                                                      InteractableEntityData[] entities2) {
-        if (entities1.length != entities2.length) return false;
-
-        InteractableEntityData[] tempEntities2 = Arrays.copyOf(entities2, entities2.length);
-        boolean[] matched = new boolean[entities2.length];
-
+    private boolean checkIsEntitiesSame(Set<InteractableEntityData> entities1,
+                                        Set<InteractableEntityData> entities2) {
+        if (entities1.size() != entities2.size()) return false;
         for (InteractableEntityData entity1 : entities1) {
-            boolean found = false;
-            for (int j = 0; j < tempEntities2.length; j++) {
-                if (!matched[j] && checkIsInteractableEntityDataEqual(entity1, tempEntities2[j])) {
-                    matched[j] = true;
-                    found = true;
-                    break;
-                }
+            if (!this.checkContainInteractableEntity(entity1, entities2)) {
+                return false;
             }
-            if (!found) return false;
         }
         return true;
     }
 
-    private boolean checkIsInteractableEntityDataEqual(InteractableEntityData entity1,
-                                                       InteractableEntityData entity2) {
-        return entity1.getName().equals(entity2.getName()) &&
-               entity1.getDescription().equals(entity2.getDescription()) &&
-               entity1.getLocationName().equals(entity2.getLocationName()) &&
-               entity1.getType() == entity2.getType();
+    private boolean checkContainInteractableEntity(InteractableEntityData targetEntity,
+                                                   Set<InteractableEntityData> entitySet) {
+        for (InteractableEntityData entity : entitySet) {
+            boolean isSame =
+                entity.getName().equals(targetEntity.getName()) &&
+                entity.getDescription().equals(targetEntity.getDescription()) &&
+                entity.getLocationName().equals(targetEntity.getLocationName()) &&
+                entity.getType() == targetEntity.getType();
+            if (isSame) return true;
+        }
+        return false;
     }
 }

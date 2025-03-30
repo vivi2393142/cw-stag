@@ -16,7 +16,7 @@ import java.util.Set;
 
 // parse xml actions file
 public class ActionsParser {
-    GameAction[] actions;
+    Set<GameAction> actions = new HashSet<>();
 
     // attribute keywords used in action file
     private enum Tag {
@@ -42,41 +42,33 @@ public class ActionsParser {
     }
 
     private void parseActions(NodeList nodes) throws UserException {
-        Set<GameAction> actions = new HashSet<>();
-
         // only the odd items are actually actions
         for (int i = 1; i < nodes.getLength(); i += 2) {
             Element action = (Element) nodes.item(i);
-
             // 1. get action attributes
             Set<String> triggers = this.getAttrFromAction(action, Tag.TRIGGERS, Tag.KEYPHRASE);
             Set<String> subjects = this.getAttrFromAction(action, Tag.SUBJECTS, Tag.ENTITY);
             String narration = action.getElementsByTagName(Tag.NARRATION.value)
                 .item(0).getTextContent().toLowerCase();
-
             Set<String> consumed = this.getAttrFromAction(action, Tag.CONSUMED, Tag.ENTITY);
             int consumedHealth = this.retrieveHealth(consumed); // retrieve health from consumed
 
             Set<String> produced = this.getAttrFromAction(action, Tag.PRODUCED, Tag.ENTITY);
             int producedHealth = this.retrieveHealth(produced); // retrieve health from produced
-
             // 2. check no keyword in attributes
             this.validateNoKeyword(triggers);
             this.validateNoKeyword(subjects);
             this.validateNoKeyword(consumed);
             this.validateNoKeyword(produced);
-
             // 3. turn into GameAction
             GameAction newAction = new GameAction(triggers, subjects,
                 consumedHealth, producedHealth, consumed, produced, narration);
-            actions.add(newAction);
+            this.actions.add(newAction);
         }
-
-        this.actions = actions.toArray(new GameAction[0]);
     }
 
     /* Getter */
-    public GameAction[] getActions() {return this.actions;}
+    public Set<GameAction> getActions() {return this.actions;}
 
     /* Utility */
     private Set<String> getAttrFromAction(Element action, Tag parent, Tag child) {

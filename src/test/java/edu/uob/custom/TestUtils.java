@@ -22,7 +22,7 @@ public class TestUtils {
     }
 
     // make actions file
-    public static File makeActionsFile(GameAction[] actions, String fileName) {
+    public static File makeActionsFile(Set<GameAction> actions, String fileName) {
         StringBuilder sb = new StringBuilder();
         sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         sb.append("<actions>\n");
@@ -83,8 +83,9 @@ public class TestUtils {
     }
 
     // make entities file
-    public static File makeEntitiesFile(EntityData[] locations, PathData[] paths,
-                                        InteractableEntityData[] entities, String fileName) {
+    public static File makeEntitiesFile(EntityData startLocation,
+                                        Set<EntityData> locations, Set<PathData> paths,
+                                        Set<InteractableEntityData> entities, String fileName) {
         StringBuilder sb = new StringBuilder();
         sb.append("digraph layout {\n")
             .append("splines = ortho;\n")
@@ -93,34 +94,13 @@ public class TestUtils {
             .append("subgraph locations {\n");
 
         // process each location and its entities
-        for (int i = 0; i < locations.length; i++) {
-            EntityData location = locations[i];
-            String locName = location.getName();
-
-            sb.append("subgraph cluster").append(i).append(" {\n")
-                .append("node [shape = \"none\"];\n")
-                .append(locName)
-                .append(" [description = \"").append(location.getDescription()).append("\"];\n");
-
-            // artefacts
-            sb.append("subgraph artefacts {\n")
-                .append("node [shape = \"diamond\"];\n");
-            makeEntitiesByType(sb, entities, locName, EntityType.ARTEFACT);
-            sb.append("}\n");
-
-            // furniture
-            sb.append("subgraph furniture {\n")
-                .append("node [shape = \"hexagon\"];\n");
-            makeEntitiesByType(sb, entities, locName, EntityType.FURNITURE);
-            sb.append("}\n");
-
-            // characters
-            sb.append("subgraph characters {\n")
-                .append("node [shape = \"ellipse\"];\n");
-            makeEntitiesByType(sb, entities, locName, EntityType.CHARACTER);
-            sb.append("}\n");
-
-            sb.append("}\n"); // close cluster
+        appendLocationGroup(sb, startLocation, 0, entities);
+        int idx = 1;
+        for (EntityData location : locations) {
+            if (!location.getName().equalsIgnoreCase(startLocation.getName())) {
+                appendLocationGroup(sb, location, idx, entities);
+                idx++;
+            }
         }
         sb.append("}\n"); // close locations
 
@@ -146,8 +126,38 @@ public class TestUtils {
         }
     }
 
-    private static void makeEntitiesByType(StringBuilder sb, InteractableEntityData[] entities,
-                                           String locationName, EntityType type) {
+    private static void appendLocationGroup(StringBuilder sb, EntityData location, int idx,
+                                            Set<InteractableEntityData> entities) {
+        String locName = location.getName();
+
+        sb.append("subgraph cluster").append(idx).append(" {\n")
+            .append("node [shape = \"none\"];\n")
+            .append(locName)
+            .append(" [description = \"").append(location.getDescription()).append("\"];\n");
+
+        // artefacts
+        sb.append("subgraph artefacts {\n")
+            .append("node [shape = \"diamond\"];\n");
+        appendEntitiesByType(sb, entities, locName, EntityType.ARTEFACT);
+        sb.append("}\n");
+
+        // furniture
+        sb.append("subgraph furniture {\n")
+            .append("node [shape = \"hexagon\"];\n");
+        appendEntitiesByType(sb, entities, locName, EntityType.FURNITURE);
+        sb.append("}\n");
+
+        // characters
+        sb.append("subgraph characters {\n")
+            .append("node [shape = \"ellipse\"];\n");
+        appendEntitiesByType(sb, entities, locName, EntityType.CHARACTER);
+        sb.append("}\n");
+
+        sb.append("}\n"); // close cluster
+    }
+
+    private static void appendEntitiesByType(StringBuilder sb, Set<InteractableEntityData> entities,
+                                             String locationName, EntityType type) {
         for (InteractableEntityData entity : entities) {
             if (entity.getType() == type && Objects.equals(entity.getLocationName(), locationName)) {
                 sb.append(entity.getName())

@@ -146,18 +146,20 @@ public class IntegrationTests extends BaseSTAGTests {
     @Test
     void testCustomFileChaos() {
         String entityFileName = "custom-chaos-entities.dot";
-        EntityData[] locations = {
-            new EntityData("cave", "a dark mysterious cave"), // cave as start
+        EntityData startLocation =
+            new EntityData("cave", "a dark mysterious cave");
+        Set<EntityData> locations = Set.of(
+            startLocation, // cave as start
             new EntityData("tunnel", "a narrow winding tunnel"),
             new EntityData("vault", "a hidden treasure vault"),
             new EntityData("storeroom", "storage for any unused entities")
-        };
-        PathData[] paths = {
+        );
+        Set<PathData> paths = Set.of(
             new PathData("cave", "tunnel"),
             new PathData("tunnel", "cave"),
-            new PathData("vault", "tunnel"),
-        };
-        InteractableEntityData[] entities = {
+            new PathData("vault", "tunnel")
+        );
+        Set<InteractableEntityData> entities = Set.of(
             new InteractableEntityData("torch", "a flaming torch",
                 "cave", EntityType.ARTEFACT),
             new InteractableEntityData("lock", "a rusty old lock",
@@ -166,8 +168,8 @@ public class IntegrationTests extends BaseSTAGTests {
                 "vault", EntityType.CHARACTER),
             new InteractableEntityData("ruby", "a sparkling red ruby",
                 "storeroom", EntityType.ARTEFACT)
-        };
-        GameAction[] actions = {
+        );
+        Set<GameAction> actions = Set.of(
             new GameAction(Set.of("unlock"), Set.of("lock", "torch"),
                 0, 0, Set.of("torch"), Set.of("vault"),
                 "You use the torch to melt the lock, revealing a vault"),
@@ -177,10 +179,10 @@ public class IntegrationTests extends BaseSTAGTests {
             new GameAction(Set.of("mine"), Set.of("guard"),
                 0, 0, Set.of(), Set.of("ruby"),
                 "You mine the vault and find a ruby")
-        };
+        );
 
         String actionFileName = "custom-chaos-actions.xml";
-        TestUtils.makeEntitiesFile(locations, paths, entities, entityFileName);
+        TestUtils.makeEntitiesFile(startLocation, locations, paths, entities, entityFileName);
         TestUtils.makeActionsFile(actions, actionFileName);
         this.resetServer(entityFileName, actionFileName);
 

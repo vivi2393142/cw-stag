@@ -19,9 +19,10 @@ public class EntitiesParser {
     List<Graph> entitySections;
     final EntityData requireLocation;
 
-    EntityData[] locations;
-    PathData[] paths;
-    InteractableEntityData[] entities;
+    Set<EntityData> locations = new HashSet<>();
+    Set<PathData> paths = new HashSet<>();
+    Set<InteractableEntityData> entities = new HashSet<>();
+    EntityData startLocation = null;
 
     // attribute keywords used in entity file
     private enum Tag {
@@ -54,33 +55,24 @@ public class EntitiesParser {
     }
 
     /* Getter */
-    public EntityData[] getLocations() {return this.locations;}
-    public PathData[] getPaths() {return this.paths;}
-    public InteractableEntityData[] getEntities() {return this.entities;}
+    public EntityData getStartLocation() {return this.startLocation;}
+    public Set<EntityData> getLocations() {return this.locations;}
+    public Set<PathData> getPaths() {return this.paths;}
+    public Set<InteractableEntityData> getEntities() {return this.entities;}
 
     /* Utility */
     private void parseLocationAndEntity() throws UserException {
-        // 1-1. check has required location in file
+        // 1. initialize locations and entities list
         List<Graph> locations = this.entitySections.get(0).getSubgraphs();
-        boolean hasRequireLocation = this.checkHasRequireLocation(locations);
-        // 1-2. get location list size based on hasRequireLocation
-        int locationCtn = locations.size();
-        if (!hasRequireLocation) locationCtn++;
 
-        // 2-1. initialize locations and entities list
-        EntityData[] loadedLocations = new EntityData[locationCtn];
-        Set<InteractableEntityData> loadedEntities = new HashSet<>();
-        // 2-2 add require location in if needed
-        if (!hasRequireLocation) loadedLocations[locationCtn - 1] = this.requireLocation;
+        // 1. check has required location in file and add it if not exist
+        boolean hasRequireLocation = this.checkHasRequireLocation(locations);
+        if (!hasRequireLocation) this.locations.add(this.requireLocation);
 
         // 3. add location & entity
-        this.getLocationAndEntity(locations, loadedLocations, loadedEntities);
+        this.getLocationAndEntity(locations, this.locations, this.entities);
 
-        // 4. load in parsed data
-        this.locations = loadedLocations;
-        this.entities = loadedEntities.toArray(new InteractableEntityData[0]);
-
-        // 5. validate no keyword in entity name
+        // 4. validate no keyword in entity name
         this.validateNoKeyword(this.locations);
         this.validateNoKeyword(this.entities);
     }
@@ -101,21 +93,24 @@ public class EntitiesParser {
         return false;
     }
 
-    private void getLocationAndEntity(List<Graph> locations, EntityData[] loadedLocations,
+    private void getLocationAndEntity(List<Graph> locations, Set<EntityData> loadedLocations,
                                       Set<InteractableEntityData> loadedEntities) {
-        for (int i = 0; i < locations.size(); i++) {
+        for (Graph locationGraph : locations) {
             // 1. add location
-            Graph location = locations.get(i);
-            Node node = location.getNodes(false).get(0);
-            String locationName = this.getNameFromNode(node);
-            String locationDesc = this.getDescFromNode(node);
-            loadedLocations[i] = new EntityData(locationName, locationDesc);
+            Node node = locationGraph.getNodes(false).get(0);
+            String name = this.getNameFromNode(node);
+            String desc = this.getDescFromNode(node);
+            EntityData newLocation = new EntityData(name, desc);
+            loadedLocations.add(newLocation);
 
-            // 2. add entity
-            List<Graph> entityGroupList = location.getSubgraphs();
+            // 2. if is first, set to start location
+            if (this.startLocation == null) this.startLocation = newLocation;
+
+            // 3. add entity
+            List<Graph> entityGroupList = locationGraph.getSubgraphs();
             for (Graph entityGroup : entityGroupList) {
                 String entityType = entityGroup.getId().getId().toLowerCase();
-                this.parseEntityGroup(entityGroup, locationName, entityType, loadedEntities);
+                this.parseEntityGroup(entityGroup, name, entityType, loadedEntities);
             }
         }
     }
@@ -123,12 +118,7 @@ public class EntitiesParser {
     /* Utility */
     public void parsePath() {
         List<Edge> paths = this.entitySections.get(1).getEdges();
-        int pathSize = paths.size();
-
-        PathData[] loadedPaths = new PathData[pathSize];
-        for (int i = 0; i < pathSize; i++) {
-            Edge path = paths.get(i);
-
+        for (Edge path : paths) {
             // 1. get from location
             Node fromLocation = path.getSource().getNode();
             String fromName = this.getNameFromNode(fromLocation);
@@ -138,9 +128,8 @@ public class EntitiesParser {
             String toName = this.getNameFromNode(toLocation);
 
             // 3. load path
-            loadedPaths[i] = new PathData(fromName, toName);
+            this.paths.add(new PathData(fromName, toName));
         }
-        this.paths = loadedPaths;
     }
 
     // get entity names and descriptions from entity graph
@@ -148,11 +137,11 @@ public class EntitiesParser {
                                   Set<InteractableEntityData> loadedEntities) {
         List<Node> nodes = entityGroup.getNodes(false);
         for (Node node : nodes) {
-            String name = this.getNameFromNode(node);
-            String desc = this.getDescFromNode(node);
-
             InteractableEntityData entityData =
-                new InteractableEntityData(name, desc, locationName, this.getEntityType(type));
+                new InteractableEntityData(
+                    this.getNameFromNode(node),
+                    this.getDescFromNode(node),
+                    locationName, this.getEntityType(type));
             loadedEntities.add(entityData);
         }
     }
@@ -173,8 +162,9 @@ public class EntitiesParser {
     }
 
     /* Validate */
-    private void validateNoKeyword(EntityData[] entityDataList) throws UserException {
-        for (EntityData entity : entityDataList) {
+    private <T extends EntityData> void validateNoKeyword(Set<T> entityDataList)
+        throws UserException {
+        for (T entity : entityDataList) {
             if (ValueUtils.matchesAnyKeyword(entity.getName())) {
                 throw new UserException("Cannot use keyword in entity name");
             }

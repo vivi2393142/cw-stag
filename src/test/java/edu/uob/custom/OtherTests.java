@@ -2,6 +2,8 @@ package edu.uob.custom;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.Set;
+
 public class OtherTests extends BaseSTAGTests {
     /* Player */
     // name same as entity
@@ -40,13 +42,13 @@ public class OtherTests extends BaseSTAGTests {
     // player name cannot use any keywords
     @Test
     void testPlayerNameCannotUseKeywords() {
-        String[] keywords = {"health", "inv", "inventory", "get", "drop", "goto", "look"};
+        Set<String> keywords = Set.of("health", "inv", "inventory", "get", "drop", "goto", "look");
         for (String keyword : keywords) {
             String cmd = new StringBuilder().append(keyword).append(": look").toString();
             this.assertCommandFail(cmd);
         }
 
-        String[] validWords = {"invest", "dropping", "gotoo", "olook"};
+        Set<String> validWords = Set.of("invest", "dropping", "gotoo", "olook");
         for (String word : validWords) {
             String cmd = new StringBuilder().append(word).append(": look").toString();
             this.assertCommandSucceed(cmd);
@@ -99,8 +101,9 @@ public class OtherTests extends BaseSTAGTests {
     // should be treated as case-insensitive
     @Test
     void testCaseInsensitiveCommands() {
-        String[] commands = {"simon: LOOK", "Simon: Get potion", "simon: goto FOREST"};
-        for (String cmd : commands) this.assertCommandSucceed(cmd);
+        this.assertCommandSucceed("simon: LOOK");
+        this.assertCommandSucceed("Simon: Get potion");
+        this.assertCommandSucceed("simon: goto FOREST");
     }
 
     // [Decorated Commands] he basic command chop tree with axe might well be entered by
@@ -108,11 +111,11 @@ public class OtherTests extends BaseSTAGTests {
     // Each incoming command MUST contain a trigger phrase and at least one subject
     @Test
     void testDecoratedCommands() {
-        String[] commands = {
+        Set<String> commands = Set.of(
             "simon: please cut tree using the axe",
             "simon: cut the axe",
             "simon: i cut the axe here"
-        };
+        );
 
         for (String cmd : commands) {
             this.resetServer(false);
@@ -125,11 +128,11 @@ public class OtherTests extends BaseSTAGTests {
     // [Word Ordering] chop tree with axe and use axe to chop tree are equivalent
     @Test
     void testWordOrdering() {
-        String[] commands = {
+        Set<String> commands = Set.of(
             "simon: use axe to cut tree",
             "simon: cut tree with axe",
             "simon: i cut the axe here"
-        };
+        );
 
         for (String cmd : commands) {
             this.resetServer(false);
@@ -143,10 +146,10 @@ public class OtherTests extends BaseSTAGTests {
     // entered as either unlock trapdoor or unlock with key
     @Test
     void testPartialCommands() {
-        String[] commands = {
+        Set<String> commands = Set.of(
             "simon: unlock trapdoor",
             "simon: unlock with key"
-        };
+        );
 
         for (String cmd : commands) {
             this.resetServer(false);

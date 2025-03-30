@@ -9,7 +9,7 @@ public class GameAction {
     private final int producedHealth;
     private final Set<String> consumedEntities;
     private final Set<String> producedEntities;
-    private final String narration;
+    private String narration = "No description available";
 
     public GameAction(Set<String> triggers, Set<String> subjects, int consumedHealth, int producedHealth,
                       Set<String> consumedEntities, Set<String> producedEntities, String narration) {
@@ -19,7 +19,7 @@ public class GameAction {
         this.producedHealth = producedHealth;
         this.consumedEntities = consumedEntities;
         this.producedEntities = producedEntities;
-        this.narration = narration != null ? narration : "No description available.";
+        if (narration != null) this.narration = narration;
     }
 
     /* Getter */

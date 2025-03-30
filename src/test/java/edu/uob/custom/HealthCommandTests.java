@@ -149,32 +149,33 @@ public class HealthCommandTests extends BaseSTAGTests {
     // test health with custom starting location (not cabin)
     @Test
     void testCustomStartingLocation() {
-        EntityData[] locations = {
-            new EntityData("forest", "a deep dark forest"),
-            new EntityData("cabin", "a log cabin in the woods"),
-        };
-        PathData[] paths = {
+        EntityData startLocation = new EntityData("forest", "a deep dark forest");
+        Set<EntityData> locations = Set.of(
+            startLocation,
+            new EntityData("cabin", "a log cabin in the woods")
+        );
+        Set<PathData> paths = Set.of(
             new PathData("cabin", "forest"),
-            new PathData("forest", "cabin"),
-        };
-        InteractableEntityData[] entities = {
+            new PathData("forest", "cabin")
+        );
+        Set<InteractableEntityData> entities = Set.of(
             new InteractableEntityData("potion", "a bottle of magic potion",
                 "cabin", EntityType.ARTEFACT),
             new InteractableEntityData("elf", "an angry looking elf",
-                "cabin", EntityType.CHARACTER),
-        };
-        GameAction[] actions = {
+                "cabin", EntityType.CHARACTER)
+        );
+        Set<GameAction> actions = Set.of(
             new GameAction(Set.of("drink"), Set.of("potion"),
                 0, 1, Set.of("potion"), Set.of(),
                 "you drink the potion and your health improves"),
             new GameAction(Set.of("fight", "hit", "attack"), Set.of("elf"),
                 1, 0, Set.of(), Set.of(),
-                "you attack the elf, but he fights back and you lose some health"),
-        };
+                "you attack the elf, but he fights back and you lose some health")
+        );
 
         String entityFileName = "custom-entities.dot";
         String actionFileName = "custom-actions.xml";
-        TestUtils.makeEntitiesFile(locations, paths, entities, entityFileName);
+        TestUtils.makeEntitiesFile(startLocation, locations, paths, entities, entityFileName);
         TestUtils.makeActionsFile(actions, actionFileName);
         this.resetServer(entityFileName, actionFileName);
 

@@ -12,7 +12,7 @@ public class ActionCommandTests extends BaseSTAGTests {
     @Tag("extended")
     void testTrigger() {
         // all valid triggers
-        String[] validTriggers = {"chop", "cut", "cut down"};
+        Set<String> validTriggers = Set.of("chop", "cut", "cut down");
         for (String trigger : validTriggers) {
             this.resetServer(true);
             this.prepareCut("yang-yang");
@@ -23,7 +23,7 @@ public class ActionCommandTests extends BaseSTAGTests {
         }
 
         // invalid trigger
-        String[] invalidTriggers = {"cutting", "hit", "cutdown"};
+        Set<String> invalidTriggers = Set.of("cutting", "hit", "cutdown");
         for (String invalidTrigger : invalidTriggers) {
             this.resetServer(true);
             this.prepareCut("yang-yang");
@@ -69,14 +69,14 @@ public class ActionCommandTests extends BaseSTAGTests {
         String m1 = "you throw an axe";
         String m2 = "you throw a potion";
         String m3 = "you throw an axe and a potion";
-        GameAction[] testActions = {
+        Set<GameAction> testActions = Set.of(
             new GameAction(Set.of("throw", "discard"), Set.of("axe"),
                 0, 0, Set.of(), Set.of(), m1),
             new GameAction(Set.of("throw", "put"), Set.of("potion"),
                 0, 0, Set.of(), Set.of(), m2),
             new GameAction(Set.of("throw"), Set.of("axe", "potion"),
-                0, 0, Set.of(), Set.of(), m3),
-        };
+                0, 0, Set.of(), Set.of(), m3)
+        );
 
         String actionFileName = "custom-actions.xml";
         TestUtils.makeActionsFile(testActions, actionFileName);
@@ -176,15 +176,15 @@ public class ActionCommandTests extends BaseSTAGTests {
     @Test
     @Tag("extended")
     void testMatchSubjectAsCharacter() {
-        String[] commands = {
+        Set<String> commands = Set.of(
             "fight elf",
             "elf fight",
             "hit elf",
             "attack elf",
             "fight and fight elf",
             "hit and attack elf",
-            "please hit ot attack elf here",
-        };
+            "please hit ot attack elf here"
+        );
         for (String cmd : commands) {
             this.resetServer(true);
             this.gotoCellar("lin");
@@ -194,13 +194,13 @@ public class ActionCommandTests extends BaseSTAGTests {
             this.assertCommandSucceed("lin: health", "2");
         }
 
-        String[] invalidCommands = {
+        Set<String> invalidCommands = Set.of(
             "fight elfA",
             "fight",
             "elf",
             "fight elf with axe",
             "fight elf in forest"
-        };
+        );
         for (String invalidCmd : invalidCommands) {
             this.resetServer(true);
             this.gotoCellar("lin");
@@ -214,14 +214,14 @@ public class ActionCommandTests extends BaseSTAGTests {
         String m1 = "you throw an axe with path to cabin";
         String m2 = "you discard an axe with path to cellar";
         String m3 = "you unlock the door and see steps leading down into a cellar";
-        GameAction[] testActions = {
+        Set<GameAction> testActions = Set.of(
             new GameAction(Set.of("throw"), Set.of("axe", "cabin"),
                 0, 0, Set.of(), Set.of(), m1),
             new GameAction(Set.of("discard"), Set.of("axe", "cellar"),
                 0, 0, Set.of(), Set.of(), m2),
             new GameAction(Set.of("open", "unlock"), Set.of("trapdoor", "key"),
-                0, 0, Set.of("key"), Set.of("cellar"), m3),
-        };
+                0, 0, Set.of("key"), Set.of("cellar"), m3)
+        );
 
         String actionFileName = "custom-actions.xml";
         TestUtils.makeActionsFile(testActions, actionFileName);
@@ -323,14 +323,14 @@ public class ActionCommandTests extends BaseSTAGTests {
         String m1 = "you hide the elf";
         String m2 = "you show the elf in forest";
         String m3 = "you unlock the door and see steps leading down into a cellar";
-        GameAction[] testActions = {
+        Set<GameAction> testActions = Set.of(
             new GameAction(Set.of("hide"), Set.of("elf"),
                 0, 0, Set.of("elf"), Set.of(), m1),
             new GameAction(Set.of("show"), Set.of("tree"),
                 0, 0, Set.of(), Set.of("elf"), m2),
             new GameAction(Set.of("open", "unlock"), Set.of("trapdoor", "key"),
-                0, 0, Set.of("key"), Set.of("cellar"), m3),
-        };
+                0, 0, Set.of("key"), Set.of("cellar"), m3)
+        );
 
         String actionFileName = "custom-actions.xml";
         TestUtils.makeActionsFile(testActions, actionFileName);
@@ -359,12 +359,12 @@ public class ActionCommandTests extends BaseSTAGTests {
     void testMatchConsumedPath() {
         String m1 = "you hide path to forest";
         String m2 = "you show path to forest";
-        GameAction[] testActions = {
+        Set<GameAction> testActions = Set.of(
             new GameAction(Set.of("hide"), Set.of("forest"),
                 0, 0, Set.of("forest"), Set.of(), m1),
             new GameAction(Set.of("show"), Set.of("axe"),
-                0, 0, Set.of(), Set.of("forest"), m2),
-        };
+                0, 0, Set.of(), Set.of("forest"), m2)
+        );
 
         String actionFileName = "custom-actions.xml";
         TestUtils.makeActionsFile(testActions, actionFileName);
@@ -450,10 +450,10 @@ public class ActionCommandTests extends BaseSTAGTests {
     @Test
     void testMatchProducedInInventory() {
         String message = "you found a shovel here";
-        GameAction[] testActions = {
+        Set<GameAction> testActions = Set.of(
             new GameAction(Set.of("search"), Set.of("forest"),
-                0, 0, Set.of(), Set.of("shovel"), message),
-        };
+                0, 0, Set.of(), Set.of("shovel"), message)
+        );
 
         String actionFileName = "custom-actions.xml";
         TestUtils.makeActionsFile(testActions, actionFileName);
@@ -484,14 +484,14 @@ public class ActionCommandTests extends BaseSTAGTests {
         String m1 = "you plant a tree";
         String m2 = "you dig a hole";
         String m3 = "you fill a hole";
-        GameAction[] testActions = {
+        Set<GameAction> testActions = Set.of(
             new GameAction(Set.of("plant"), Set.of("potion"),
                 0, 0, Set.of(), Set.of("tree"), m1),
             new GameAction(Set.of("dig"), Set.of("axe"),
                 0, 0, Set.of(), Set.of("hole"), m2),
             new GameAction(Set.of("fill"), Set.of("hole", "axe"),
-                0, 0, Set.of("hole"), Set.of(), m3),
-        };
+                0, 0, Set.of("hole"), Set.of(), m3)
+        );
 
         String actionFileName = "custom-actions.xml";
         TestUtils.makeActionsFile(testActions, actionFileName);

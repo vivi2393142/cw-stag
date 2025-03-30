@@ -2,11 +2,13 @@ package edu.uob.custom;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.Set;
+
 public class DropCommandTests extends BaseSTAGTests {
     // drop with valid cmd
     @Test
     void testBasicDrop() {
-        String[] variants = {"drop", "DROP", "dRoP"};
+        Set<String> variants = Set.of("drop", "DROP", "dRoP");
         for (String variant : variants) {
             // get axe
             this.assertCommandSucceed("simon: get axe", "axe");
@@ -19,7 +21,7 @@ public class DropCommandTests extends BaseSTAGTests {
             this.assertCommandSucceed("simon: inv", "axe", true);
         }
 
-        String[] failVariants = {"dropA", "DROP1", "dRoPz"};
+        Set<String> failVariants = Set.of("dropA", "DROP1", "dRoPz");
         this.assertCommandSucceed("simon: get axe");
         for (String variant : failVariants) {
             String cmd = new StringBuilder()

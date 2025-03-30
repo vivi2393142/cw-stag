@@ -6,22 +6,21 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ActionsFileParserTests {
-    GameAction[] expectedBasicActions = {
+    Set<GameAction> expectedBasicActions = Set.of(
         new GameAction(Set.of("open", "unlock"), Set.of("trapdoor", "key"),
             0, 0, Set.of("key"), Set.of("cellar"),
             "you unlock the trapdoor and see steps leading down into a cellar"),
         new GameAction(Set.of("chop", "cut", "cutdown"), Set.of("tree", "axe"),
             0, 0, Set.of("tree"), Set.of("log"),
             "you cut down the tree with the axe")
-    };
-    GameAction[] expectedExtendedActions = {
+    );
+    Set<GameAction> expectedExtendedActions = Set.of(
         new GameAction(Set.of("open", "unlock"), Set.of("trapdoor", "key"),
             0, 0, Set.of("key"), Set.of("cellar"),
             "you unlock the trapdoor and see steps leading down into a cellar"),
@@ -46,7 +45,7 @@ public class ActionsFileParserTests {
         new GameAction(Set.of("blow"), Set.of("horn"),
             0, 0, Set.of(), Set.of("lumberjack"),
             "you blow the horn and as if by magic, a lumberjack appears !")
-    };
+    );
 
     @Test
     void testParseBasicFile() {
@@ -74,10 +73,9 @@ public class ActionsFileParserTests {
     // should be all lowercase after parse
     @Test
     void testUpperCaseInput() {
-        GameAction[] upperCasedActions = new GameAction[this.expectedExtendedActions.length];
-        int i = 0;
+        Set<GameAction> upperCasedActions = new HashSet<>();
         for (GameAction action : this.expectedExtendedActions) {
-            upperCasedActions[i] = new GameAction(
+            upperCasedActions.add(new GameAction(
                 this.getUpperCaseSet(action.getTriggers()),
                 this.getUpperCaseSet(action.getSubjects()),
                 action.getConsumedHealth(),
@@ -85,8 +83,7 @@ public class ActionsFileParserTests {
                 this.getUpperCaseSet(action.getConsumedEntities()),
                 this.getUpperCaseSet(action.getProducedEntities()),
                 action.getNarration().toUpperCase()
-            );
-            i++;
+            ));
         }
 
         String testExtendedFileName = "custom-extended.xml";
@@ -105,11 +102,11 @@ public class ActionsFileParserTests {
 
     @Test
     void testNoKeywordInAction() {
-        GameAction[] actions = {
+        Set<GameAction> actions = Set.of(
             new GameAction(Set.of("get", "unlock"), Set.of("trapdoor", "key"),
                 0, 0, Set.of("key"), Set.of("cellar"),
-                "you unlock the trapdoor and see steps leading down into a cellar"),
-        };
+                "you unlock the trapdoor and see steps leading down into a cellar")
+        );
         String testExtendedFileName = "custom-extended.xml";
         File actionsFile = TestUtils.makeActionsFile(actions, testExtendedFileName);
         try {
@@ -135,56 +132,44 @@ public class ActionsFileParserTests {
 
     /* Assert */
     // reusable method to parse and assert actions from a file
-    private void parseAndAssertActions(String fileName, GameAction[] expectedActions) {
+    private void parseAndAssertActions(String fileName, Set<GameAction> expectedActions) {
         File actionsFile = Paths.get(TestUtils.getFilePath(fileName)).toAbsolutePath().toFile();
-        GameAction[] loadedActions;
         try {
             ActionsParser actionsParser = new ActionsParser(actionsFile);
-            loadedActions = actionsParser.getActions();
+            Set<GameAction> loadedActions = actionsParser.getActions();
+            // check if loaded actions exactly match expected actions regardless of order
+            assertTrue(this.checkIsActionsSame(loadedActions, expectedActions),
+                "Loaded actions should exactly match expected actions");
         } catch (Exception e) {
             fail("Should not throw exception when parsing valid file");
-            return;
         }
-
-        // check if loaded actions exactly match expected actions regardless of order
-        assertTrue(this.checkIsActionsSame(loadedActions, expectedActions),
-            "Loaded actions should exactly match expected actions");
     }
-
 
     /* Utility */
     // check if actual and expected GameAction list are same
-    private boolean checkIsActionsSame(GameAction[] actions1, GameAction[] actions2) {
-        if (actions1.length != actions2.length) return false;
-
-        // create a copy of actions2 to mark matches
-        GameAction[] tempActions2 = Arrays.copyOf(actions2, actions2.length);
-        boolean[] matched = new boolean[actions2.length]; // Track matched elements
-
-        // for each action in actions1, find a match in tempActions2
+    private boolean checkIsActionsSame(Set<GameAction> actions1, Set<GameAction> actions2) {
+        if (actions1.size() != actions2.size()) return false;
         for (GameAction action1 : actions1) {
-            boolean found = false;
-            for (int j = 0; j < tempActions2.length; j++) {
-                if (!matched[j] && checkIsActionSame(action1, tempActions2[j])) {
-                    matched[j] = true;
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) return false;
+            if (!this.checkContainAction(action1, actions2)) return false;
         }
         return true;
     }
 
+    private boolean checkContainAction(GameAction targetAction, Set<GameAction> actionSet) {
+        for (GameAction action : actionSet) {
+            if (this.checkIsActionSame(action, targetAction)) return true;
+        }
+        return false;
+    }
+
     // check if actual and expected GameAction are same
     private boolean checkIsActionSame(GameAction action1, GameAction action2) {
-        return
-            this.checkIsStrSetSame(action1.getTriggers(), action2.getTriggers()) &&
-            this.checkIsStrSetSame(action1.getSubjects(), action2.getSubjects()) &&
-            this.checkIsStrSetSame(action1.getConsumedEntities(), action2.getConsumedEntities()) &&
-            this.checkIsStrSetSame(action1.getProducedEntities(), action2.getProducedEntities()) &&
-            action1.getConsumedHealth() == action2.getConsumedHealth() &&
-            action1.getProducedHealth() == action2.getProducedHealth();
+        return this.checkIsStrSetSame(action1.getTriggers(), action2.getTriggers()) &&
+               this.checkIsStrSetSame(action1.getSubjects(), action2.getSubjects()) &&
+               this.checkIsStrSetSame(action1.getConsumedEntities(), action2.getConsumedEntities()) &&
+               this.checkIsStrSetSame(action1.getProducedEntities(), action2.getProducedEntities()) &&
+               action1.getConsumedHealth() == action2.getConsumedHealth() &&
+               action1.getProducedHealth() == action2.getProducedHealth();
     }
 
     private boolean checkIsStrSetSame(Set<String> set1, Set<String> set2) {
