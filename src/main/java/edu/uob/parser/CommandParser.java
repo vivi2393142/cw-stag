@@ -122,6 +122,7 @@ public class CommandParser {
         return this.isProduceSetAvailable(action.getProducedEntities());
     }
 
+    // check if command contain any trigger keyword
     private boolean hasMatchingTrigger(GameAction action, String cmd) {
         for (String trigger : action.getTriggers()) {
             if (ValueUtils.containsIgnoreCase(cmd, trigger)) return true;
@@ -129,6 +130,7 @@ public class CommandParser {
         return false;
     }
 
+    // get all mentioned subjects from command
     private boolean matchesSubjectsInCommand(GameAction action, String cmd, Player player) {
         boolean hasSubject = false;
 
@@ -151,6 +153,7 @@ public class CommandParser {
         return hasSubject; // 4. at least one subject in command
     }
 
+    // check if subject set is available
     private boolean isSubjectSetAvailable(Set<String> subjects, Player player) {
         for (String subject : subjects) {
             if (!this.isSubjectAvailable(subject, player)) return false;
@@ -158,6 +161,7 @@ public class CommandParser {
         return true;
     }
 
+    // check if subject is available
     private boolean isSubjectAvailable(String subject, Player player) {
         Location currLocation = this.gameManager.getLocation(player.getLocation());
 
@@ -173,6 +177,7 @@ public class CommandParser {
         return player.getInventories().contains(subject);
     }
 
+    // check if produce subject set is available (from storeroom)
     private boolean isProduceSetAvailable(Set<String> producedEntities) {
         for (String producedEntity : producedEntities) {
             if (!this.isProduceAvailable(producedEntity)) return false;
@@ -180,6 +185,7 @@ public class CommandParser {
         return true;
     }
 
+    // check if produce subject is available (from storeroom)
     private boolean isProduceAvailable(String producedEntity) {
         // 1. is any of location, or
         Location targetLocation = this.gameManager.getLocation(producedEntity);
@@ -188,6 +194,7 @@ public class CommandParser {
         return this.gameManager.getStoreroom().getInterEntities().contains(producedEntity);
     }
 
+    // check is game entity available according to the current player
     private boolean isAvailableEntity(GameEntity entity, Player player) {
         EntityType type = entity.getType();
         if (type == EntityType.LOCATION) return this.isAvailableEntity((Location) entity, player);
@@ -195,6 +202,7 @@ public class CommandParser {
         else return this.isAvailableEntity((InteractableEntity) entity, player);
     }
 
+    // check is interactable entity available according to the current player
     private boolean isAvailableEntity(InteractableEntity targetEntity, Player player) {
         if (targetEntity == null) return false;
 
@@ -213,6 +221,7 @@ public class CommandParser {
         return locationName != null && locationName.equalsIgnoreCase(player.getLocation());
     }
 
+    // check is location available according to the current player
     private boolean isAvailableEntity(Location targetPath, Player player) {
         Location currLocation = this.gameManager.getLocation(player.getLocation());
         for (String p : currLocation.getPaths()) {

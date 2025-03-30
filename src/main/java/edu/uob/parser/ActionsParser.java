@@ -16,7 +16,7 @@ import java.util.Set;
 
 // parse xml actions file
 public class ActionsParser {
-    Set<GameAction> actions = new HashSet<>();
+    final Set<GameAction> actions = new HashSet<>();
 
     // attribute keywords used in action file
     private enum Tag {
@@ -50,11 +50,13 @@ public class ActionsParser {
             Set<String> subjects = this.getAttrFromAction(action, Tag.SUBJECTS, Tag.ENTITY);
             String narration = action.getElementsByTagName(Tag.NARRATION.value)
                 .item(0).getTextContent().toLowerCase();
+
             Set<String> consumed = this.getAttrFromAction(action, Tag.CONSUMED, Tag.ENTITY);
             int consumedHealth = this.retrieveHealth(consumed); // retrieve health from consumed
 
             Set<String> produced = this.getAttrFromAction(action, Tag.PRODUCED, Tag.ENTITY);
             int producedHealth = this.retrieveHealth(produced); // retrieve health from produced
+
             // 2. check no keyword in attributes
             this.validateNoKeyword(triggers);
             this.validateNoKeyword(subjects);

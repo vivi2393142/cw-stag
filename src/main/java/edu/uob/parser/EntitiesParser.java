@@ -19,9 +19,9 @@ public class EntitiesParser {
     List<Graph> entitySections;
     final EntityData requireLocation;
 
-    Set<EntityData> locations = new HashSet<>();
-    Set<PathData> paths = new HashSet<>();
-    Set<InteractableEntityData> entities = new HashSet<>();
+    final Set<EntityData> locations = new HashSet<>();
+    final Set<PathData> paths = new HashSet<>();
+    final Set<InteractableEntityData> entities = new HashSet<>();
     EntityData startLocation = null;
 
     // attribute keywords used in entity file
