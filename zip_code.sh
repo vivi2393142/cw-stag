@@ -25,6 +25,7 @@ echo ".git/" >> "$EXCLUDE_FILE"
 echo "target/" >> "$EXCLUDE_FILE"
 echo "*.sh" >> "$EXCLUDE_FILE"
 echo ".idea/" >> "$EXCLUDE_FILE"
+echo "README/" >> "$EXCLUDE_FILE"
 
 # Zip all files in the current directory, excluding specified patterns
 zip -r "$OUTPUT_ZIP" . -x@"$EXCLUDE_FILE"
