@@ -18,11 +18,11 @@ public class ValueUtils {
     }
 
     public static boolean containsIgnoreCase(String input, Keyword keyword) {
-        return containsIgnoreCase(input, keyword.name());
+        return ValueUtils.containsIgnoreCase(input, keyword.name());
     }
 
     public static boolean matchesAnyKeyword(String input) {
-        return matchesAnyKeyword(input, new HashSet<>());
+        return ValueUtils.matchesAnyKeyword(input, new HashSet<>());
     }
 
     public static boolean matchesAnyKeyword(String input, Set<Keyword> withoutKeywords) {
