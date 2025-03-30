@@ -30,7 +30,8 @@ public class CommandParser {
         this.addPlayerIfNotExisted(player);
 
         // 2. get and trim reset command
-        String restCms = lowerCasedCmd.substring(colonIdx + 1).toLowerCase();
+        int afterColonIdx = colonIdx + 1;
+        String restCms = lowerCasedCmd.substring(afterColonIdx).toLowerCase();
         if (restCms.isEmpty()) throw new UserException("Command cannot be empty");
 
         // 3. get all keywords
