@@ -1,26 +1,23 @@
 # Game Configuration Parser
 
-## Overview
+A Java-based mini engine that parses configuration files (`XML` and `DOT`) into in-memory game objects for a text-based adventure simulation. This project demonstrates practical experience in **Java**, **parsing**, **testing**, and **build automation**.
 
-This is a Java-based practice project that simulates a text-based adventure game engine by parsing configuration files (
-XML and DOT) into in-memory data structures. It’s not a production-ready tool but a demonstration of my skills in Java,
-parsing, testing, and scripting.
+### 🧩 Features
+- **Action Parser** – Converts `actions.xml` into executable `GameAction` objects (e.g., *open*, *dig*).  
+- **Entity Parser** – Reads `entities.dot` to build game entities such as locations, paths, and objects.  
+- **JUnit Testing** – Comprehensive tests in `src/test/java` to verify parsing logic and data mapping.
 
-## Features
+### ⚙️ Tech Stack
+Java · Maven · JUnit · Shell Scripting
 
-- **Actions Parser**: Parses actions.xml into GameAction objects (e.g., "open", "dig").
-- **Entities Parser**: Parses entities.dot into game entities (locations, paths, objects).
-- **Tests**: JUnit tests in src/test/java to validate parsing.
-
-## Tech Stack
-
-- Java
-- Maven
-- JUnit
-- Shell Scripting
-
-## How to Run
-
-1. **Build & Test**: ./mvnw clean test
-2. **Check Code**: ./check_files.sh src/main/java/edu/uob
-3. **Zip & Validate**: ./zip_code.sh
+### 🚀 How to Run
+```bash
+  # Build and test
+  ./mvnw clean test
+  
+  # Check source files
+  ./check_files.sh src/main/java/edu/uob
+  
+  # Zip and validate project
+  ./zip_code.sh
+```
